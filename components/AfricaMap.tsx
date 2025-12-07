@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import { CountryGeoFeature, MapTooltipData } from '../types';
+import { Filter } from 'lucide-react';
 
 interface AfricaMapProps {
   onCountryClick: (countryName: string) => void;
@@ -16,6 +17,8 @@ const STATUS_COLORS: Record<string, string> = {
   'Muito Estável': '#2563eb' // Blue 600
 };
 
+const FILTER_OPTIONS = ['Todos', 'Crítico', 'Instável', 'Moderado', 'Estável', 'Muito Estável'];
+
 const DEFAULT_FILL = "#1e293b"; // Slate 800
 const HOVER_STROKE = "#ffffff";
 const DEFAULT_STROKE = "#475569";
@@ -26,6 +29,9 @@ export const AfricaMap: React.FC<AfricaMapProps> = ({ onCountryClick, countrySta
   const [geoData, setGeoData] = useState<CountryGeoFeature[] | null>(null);
   const [tooltip, setTooltip] = useState<MapTooltipData | null>(null);
   
+  // Filter State
+  const [selectedFilter, setSelectedFilter] = useState<string>('Todos');
+
   // Advanced Loading States
   const [loadingMap, setLoadingMap] = useState(true);
   const [showSlowLoadingMessage, setShowSlowLoadingMessage] = useState(false);
@@ -161,12 +167,42 @@ export const AfricaMap: React.FC<AfricaMapProps> = ({ onCountryClick, countrySta
       .attr("class", "country-path cursor-pointer transition-all duration-300 ease-in-out")
       .attr("fill", (d) => {
         const status = countryStatusMap[d.properties.name];
+        
+        // Filter Logic
+        if (selectedFilter !== 'Todos') {
+          if (status === selectedFilter) {
+            return STATUS_COLORS[status];
+          }
+          // Dim non-matching countries
+          return "#0f172a"; 
+        }
+
+        // Default behavior
         return status ? STATUS_COLORS[status] : DEFAULT_FILL;
       })
-      .attr("stroke", DEFAULT_STROKE)
+      .attr("stroke", (d) => {
+         const status = countryStatusMap[d.properties.name];
+         if (selectedFilter !== 'Todos' && status !== selectedFilter) {
+           return "#1e293b"; // Darker stroke for dimmed countries
+         }
+         return DEFAULT_STROKE;
+      })
       .attr("stroke-width", 0.5)
+      .attr("opacity", (d) => {
+        const status = countryStatusMap[d.properties.name];
+        // If filter is active, and country doesn't match, reduce opacity significantly
+        if (selectedFilter !== 'Todos') {
+           if (status === selectedFilter) return 1;
+           return 0.3; // Ghost effect
+        }
+        return 1;
+      })
       .on("mouseover", function(event, d) {
-        // Use current color as base, but brighten or outline
+        const status = countryStatusMap[d.properties.name];
+        
+        // Don't highlight if filtered out
+        if (selectedFilter !== 'Todos' && status !== selectedFilter) return;
+
         d3.select(this)
           .attr("stroke", HOVER_STROKE)
           .attr("stroke-width", 1.5)
@@ -182,20 +218,30 @@ export const AfricaMap: React.FC<AfricaMapProps> = ({ onCountryClick, countrySta
          setTooltip(prev => prev ? ({ ...prev, x: event.pageX, y: event.pageY }) : null);
       })
       .on("mouseout", function(event, d) {
+        const status = countryStatusMap[d.properties.name];
+        
+        // Restore stroke based on filter state
+        let strokeColor = DEFAULT_STROKE;
+        if (selectedFilter !== 'Todos' && status !== selectedFilter) {
+           strokeColor = "#1e293b";
+        }
+
         d3.select(this)
-          .attr("stroke", DEFAULT_STROKE)
+          .attr("stroke", strokeColor)
           .attr("stroke-width", 0.5);
         setTooltip(null);
       })
       .on("click", (event, d) => {
-        // Simple visual feedback
+        // Visual feedback
         d3.select(event.currentTarget)
            .transition().duration(100)
            .attr("fill", "#ffffff")
            .transition().duration(300)
            .attr("fill", () => {
              const status = countryStatusMap[d.properties.name];
-             return status ? STATUS_COLORS[status] : "#d97706"; // Amber as 'loading/selected' temporary
+             if (selectedFilter !== 'Todos' && status === selectedFilter) return STATUS_COLORS[status];
+             if (selectedFilter === 'Todos' && status) return STATUS_COLORS[status];
+             return selectedFilter !== 'Todos' ? "#0f172a" : "#d97706"; // Amber as temp or dark if filtered
            });
            
         onCountryClick(d.properties.name);
@@ -210,7 +256,7 @@ export const AfricaMap: React.FC<AfricaMapProps> = ({ onCountryClick, countrySta
 
     svg.call(zoom);
 
-  }, [geoData, dimensions, onCountryClick, countryStatusMap]);
+  }, [geoData, dimensions, onCountryClick, countryStatusMap, selectedFilter]);
 
   return (
     <div ref={containerRef} className="w-full h-full relative bg-geo-dark overflow-hidden">
@@ -240,6 +286,40 @@ export const AfricaMap: React.FC<AfricaMapProps> = ({ onCountryClick, countrySta
         </div>
       )}
       
+      {/* Filter Control - Top Right */}
+      {!loadingMap && (
+        <div className="absolute top-6 right-6 z-20">
+          <div className="relative group">
+            <div className="flex items-center gap-2 bg-geo-panel/95 backdrop-blur border border-slate-700 rounded-lg p-1 pr-3 shadow-lg hover:border-geo-accent transition-colors">
+              <div className="p-2 bg-slate-800 rounded text-geo-accent">
+                <Filter size={16} />
+              </div>
+              <select 
+                value={selectedFilter}
+                onChange={(e) => setSelectedFilter(e.target.value)}
+                className="bg-transparent text-sm font-medium text-slate-200 outline-none cursor-pointer appearance-none pr-6"
+                style={{ backgroundImage: 'none' }}
+              >
+                {FILTER_OPTIONS.map(opt => (
+                  <option key={opt} value={opt} className="bg-geo-panel text-slate-200">
+                    {opt === 'Todos' ? 'Todos os Países' : opt}
+                  </option>
+                ))}
+              </select>
+              {/* Custom Arrow */}
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                <svg width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M1 1L5 5L9 1" stroke="#94a3b8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+            </div>
+            <div className="absolute -top-5 right-0 text-[10px] text-slate-500 font-bold uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity">
+              Filtrar por Estabilidade
+            </div>
+          </div>
+        </div>
+      )}
+
       <svg 
         ref={svgRef} 
         className="w-full h-full block"
@@ -264,14 +344,14 @@ export const AfricaMap: React.FC<AfricaMapProps> = ({ onCountryClick, countrySta
         </div>
       )}
 
-      {/* Legend - MOVED TO BOTTOM LEFT */}
+      {/* Legend - BOTTOM LEFT */}
       <div className="absolute bottom-6 left-6 bg-geo-panel/95 backdrop-blur p-4 rounded border border-slate-700 shadow-xl pointer-events-none md:pointer-events-auto min-w-[180px]">
         <h4 className="text-xs font-bold uppercase text-slate-400 mb-3 tracking-wider border-b border-slate-700 pb-2">
           Legenda IGA
         </h4>
         <div className="space-y-2">
           {Object.entries(STATUS_COLORS).map(([label, color]) => (
-            <div key={label} className="flex items-center justify-between text-xs">
+            <div key={label} className={`flex items-center justify-between text-xs transition-opacity duration-300 ${selectedFilter !== 'Todos' && selectedFilter !== label ? 'opacity-30' : 'opacity-100'}`}>
               <span className="text-slate-300 font-medium">{label}</span>
               <span 
                 className="w-4 h-4 rounded shadow-sm border border-white/10" 
@@ -279,14 +359,14 @@ export const AfricaMap: React.FC<AfricaMapProps> = ({ onCountryClick, countrySta
               ></span>
             </div>
           ))}
-          <div className="flex items-center justify-between text-xs pt-1 mt-1 border-t border-slate-700/50">
+          <div className={`flex items-center justify-between text-xs pt-1 mt-1 border-t border-slate-700/50 ${selectedFilter !== 'Todos' ? 'opacity-30' : 'opacity-100'}`}>
             <span className="text-slate-500 italic">Não Analisado</span>
             <span className="w-4 h-4 rounded bg-slate-800 border border-slate-600"></span>
           </div>
         </div>
       </div>
 
-      {/* Navigation Instructions - MOVED TO BOTTOM RIGHT */}
+      {/* Navigation Instructions - BOTTOM RIGHT */}
       <div className="absolute bottom-6 right-6 bg-geo-panel/90 backdrop-blur p-4 rounded border border-slate-700 shadow-xl pointer-events-none md:pointer-events-auto max-w-xs text-right md:text-left">
         <h4 className="text-xs font-bold uppercase text-slate-400 mb-2 tracking-wider">Navegação</h4>
         <ul className="text-xs text-slate-300 space-y-1.5">
