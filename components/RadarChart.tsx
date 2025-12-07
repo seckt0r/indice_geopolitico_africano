@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 import { IGAReport } from '../types';
@@ -7,12 +8,12 @@ interface RadarChartProps {
   colors: string[];
 }
 
-const PILLARS = [
-  { key: 'economic', label: 'Económico' },
-  { key: 'political', label: 'Político' },
-  { key: 'security', label: 'Segurança' },
-  { key: 'international', label: 'Internacional' },
-  { key: 'history', label: 'Histórico' },
+const DIMENSIONS = [
+  { key: 'economic', label: 'Econ' },
+  { key: 'political', label: 'Pol' },
+  { key: 'security', label: 'Sec' },
+  { key: 'international', label: 'Int' },
+  { key: 'historical', label: 'Hist' },
 ];
 
 export const RadarChart: React.FC<RadarChartProps> = ({ data, colors }) => {
@@ -37,7 +38,7 @@ export const RadarChart: React.FC<RadarChartProps> = ({ data, colors }) => {
 
     // Scales
     const rScale = d3.scaleLinear().range([0, radius]).domain([0, 100]);
-    const angleSlice = (Math.PI * 2) / PILLARS.length;
+    const angleSlice = (Math.PI * 2) / DIMENSIONS.length;
 
     // Draw the Grid (Concentric circles)
     const levels = [20, 40, 60, 80, 100];
@@ -68,7 +69,7 @@ export const RadarChart: React.FC<RadarChartProps> = ({ data, colors }) => {
 
     // Draw Axes (Lines radiating from center)
     const axis = g.selectAll(".axis")
-      .data(PILLARS)
+      .data(DIMENSIONS)
       .enter()
       .append("g")
       .attr("class", "axis");
@@ -100,9 +101,9 @@ export const RadarChart: React.FC<RadarChartProps> = ({ data, colors }) => {
       .y((d, i) => rScale(d.value) * Math.sin(angleSlice * i - Math.PI / 2));
 
     data.forEach((country, idx) => {
-      const countryData = PILLARS.map(p => ({ 
+      const countryData = DIMENSIONS.map(p => ({ 
         axis: p.label, 
-        value: (country.pillars as any)[p.key].score 
+        value: (country.dimensions as any)[p.key].score 
       }));
 
       // Area

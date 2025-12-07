@@ -1,11 +1,13 @@
+
 import React, { useState, useCallback } from 'react';
 import { AfricaMap } from './components/AfricaMap';
 import { Sidebar } from './components/Sidebar';
 import { MethodologyPage } from './components/MethodologyPage';
 import { ComparisonPage } from './components/ComparisonPage';
 import { fetchCountryAnalysis } from './services/geminiService';
-import { IGAReport } from './types';
-import { Globe, BookOpen, Map as MapIcon, ChevronRight, FileText, GitCompare, X, GraduationCap, Building2, FlaskConical } from 'lucide-react';
+import { IGAReport, Language } from './types';
+import { Globe, BookOpen, Map as MapIcon, ChevronRight, FileText, GitCompare, X, GraduationCap, Building2, FlaskConical, Languages } from 'lucide-react';
+import { t } from './utils/translations';
 
 // Simple Router State
 enum Page {
@@ -22,6 +24,7 @@ const App: React.FC = () => {
   const [reportData, setReportData] = useState<IGAReport | null>(null);
   const [loadingReport, setLoadingReport] = useState(false);
   const [errorReport, setErrorReport] = useState<string | null>(null);
+  const [language, setLanguage] = useState<Language>('pt');
   
   // Stores the stability level of countries that have been analyzed
   const [analyzedCountries, setAnalyzedCountries] = useState<Record<string, string>>({});
@@ -37,7 +40,7 @@ const App: React.FC = () => {
     setReportData(null); // Reset previous data
 
     try {
-      const data = await fetchCountryAnalysis(countryName);
+      const data = await fetchCountryAnalysis(countryName, language);
       setReportData(data);
       
       // Update the map colors with the new result
@@ -47,11 +50,11 @@ const App: React.FC = () => {
       }));
 
     } catch (err) {
-      setErrorReport("Não foi possível gerar o relatório IGA. Verifique a chave API ou tente novamente.");
+      setErrorReport(t('errorAnalysis', language));
     } finally {
       setLoadingReport(false);
     }
-  }, []);
+  }, [language]);
 
   const closeSidebar = () => {
     setIsSidebarOpen(false);
@@ -61,7 +64,7 @@ const App: React.FC = () => {
     if (comparisonList.find(c => c.countryName === data.countryName)) return;
     
     if (comparisonList.length >= 3) {
-      alert("Máximo de 3 países para comparação.");
+      alert("Max 3");
       return;
     }
 
@@ -73,142 +76,175 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col font-sans text-geo-text bg-geo-dark selection:bg-geo-accent selection:text-white">
+    <div className="h-screen flex flex-col font-sans text-geo-text bg-geo-dark selection:bg-geo-accent selection:text-white overflow-hidden">
       {/* Header */}
-      <header className="h-16 border-b border-slate-800 flex items-center px-6 bg-geo-dark/95 backdrop-blur z-40 sticky top-0">
+      <header className="h-16 shrink-0 border-b border-slate-800 flex items-center px-4 md:px-6 bg-geo-dark/95 backdrop-blur z-40 relative">
         <div 
           className="flex items-center gap-3 cursor-pointer group"
           onClick={() => setCurrentPage(Page.HOME)}
         >
           <Globe className="text-geo-accent group-hover:rotate-180 transition-transform duration-700" size={28} />
           <h1 className="text-xl font-serif font-bold tracking-tight text-white group-hover:text-geo-accent transition-colors hidden md:block">
-            Catálogo da Geopolítica de África
+            {t('appTitle', language)}
           </h1>
            <h1 className="text-xl font-serif font-bold tracking-tight text-white group-hover:text-geo-accent transition-colors md:hidden">
-            IGA
+            {t('appTitleShort', language)}
           </h1>
         </div>
-        <nav className="ml-auto flex gap-4 md:gap-8">
-          <button 
-            onClick={() => setCurrentPage(Page.HOME)}
-            className={`text-sm font-medium transition-colors ${currentPage === Page.HOME ? 'text-geo-accent' : 'text-slate-400 hover:text-white'}`}
-          >
-            Sobre
-          </button>
-           <button 
-            onClick={() => setCurrentPage(Page.METHODOLOGY)}
-            className={`text-sm font-medium transition-colors flex items-center gap-1 ${currentPage === Page.METHODOLOGY ? 'text-geo-accent' : 'text-slate-400 hover:text-white'}`}
-          >
-            <FileText size={16} className="hidden sm:block"/>
-            Metodologia
-          </button>
-          <button 
-             onClick={() => setCurrentPage(Page.MAP)}
-             className={`text-sm font-medium transition-colors flex items-center gap-1 ${currentPage === Page.MAP ? 'text-geo-accent' : 'text-slate-400 hover:text-white'}`}
-          >
-            <MapIcon size={16} className="hidden sm:block"/>
-            Mapa IGA
-          </button>
+        <nav className="ml-auto flex gap-3 md:gap-6 items-center">
+          <div className="flex gap-4 hidden sm:flex">
+            <button 
+              onClick={() => setCurrentPage(Page.HOME)}
+              className={`text-sm font-medium transition-colors ${currentPage === Page.HOME ? 'text-geo-accent' : 'text-slate-400 hover:text-white'}`}
+            >
+              {t('about', language)}
+            </button>
+             <button 
+              onClick={() => setCurrentPage(Page.METHODOLOGY)}
+              className={`text-sm font-medium transition-colors flex items-center gap-1 ${currentPage === Page.METHODOLOGY ? 'text-geo-accent' : 'text-slate-400 hover:text-white'}`}
+            >
+              <FileText size={16} className="hidden sm:block"/>
+              {t('methodology', language)}
+            </button>
+            <button 
+               onClick={() => setCurrentPage(Page.MAP)}
+               className={`text-sm font-medium transition-colors flex items-center gap-1 ${currentPage === Page.MAP ? 'text-geo-accent' : 'text-slate-400 hover:text-white'}`}
+            >
+              <MapIcon size={16} className="hidden sm:block"/>
+              {t('map', language)}
+            </button>
+          </div>
+
+          {/* Language Selector */}
+          <div className="relative group">
+            <div className="flex items-center gap-1 bg-slate-800/50 p-1.5 rounded-lg border border-slate-700/50 hover:border-geo-accent transition-colors cursor-pointer">
+               <Languages size={16} className="text-slate-400"/>
+               <select 
+                  value={language}
+                  onChange={(e) => setLanguage(e.target.value as Language)}
+                  className="bg-transparent text-xs font-bold text-white outline-none cursor-pointer appearance-none uppercase w-8"
+                  style={{ textAlignLast: 'center' }}
+               >
+                  <option value="pt" className="bg-geo-panel">PT</option>
+                  <option value="en" className="bg-geo-panel">EN</option>
+                  <option value="fr" className="bg-geo-panel">FR</option>
+                  <option value="es" className="bg-geo-panel">ES</option>
+                  <option value="de" className="bg-geo-panel">DE</option>
+                  <option value="it" className="bg-geo-panel">IT</option>
+                  <option value="ru" className="bg-geo-panel">RU</option>
+                  <option value="zh" className="bg-geo-panel">ZH</option>
+               </select>
+            </div>
+          </div>
         </nav>
       </header>
 
-      {/* Main Content */}
-      <main className="flex-1 relative overflow-hidden overflow-y-auto">
+      {/* Main Content Area - strictly controlled overflow */}
+      <main className="flex-1 relative overflow-hidden bg-geo-dark">
+        
+        {/* HOME PAGE */}
         {currentPage === Page.HOME && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center bg-[url('https://images.unsplash.com/photo-1543187127-14e4b5182937?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center">
-            <div className="absolute inset-0 bg-geo-dark/85"></div> {/* Overlay */}
-            
-            <div className="relative z-10 max-w-3xl space-y-8 animate-in fade-in zoom-in duration-700 -mt-20">
-              <span className="text-geo-accent font-bold tracking-[0.2em] uppercase text-xs md:text-sm border border-geo-accent px-4 py-2 rounded-full inline-block mb-4">
-                Inteligência Estratégica & Análise de Dados
-              </span>
-              <h2 className="text-4xl md:text-6xl font-serif font-bold text-white leading-tight">
-                Entenda o <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-orange-600">Poder</span> em África
-              </h2>
-              <p className="text-lg md:text-xl text-slate-300 leading-relaxed max-w-2xl mx-auto">
-                Bem-vindo ao Índice Geopolítico Africano (IGA). Esta plataforma utiliza algoritmos avançados para mapear a estabilidade, influência económica e dinâmica de conflitos nas 54 nações do continente.
-              </p>
+          <div className="w-full h-full overflow-y-auto relative">
+            <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center bg-[url('https://images.unsplash.com/photo-1543187127-14e4b5182937?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center min-h-[calc(100vh-4rem)]">
+              <div className="absolute inset-0 bg-geo-dark/85"></div> {/* Overlay */}
               
-              <div className="flex flex-col sm:flex-row justify-center gap-4 pt-4">
-                <button 
-                  onClick={() => setCurrentPage(Page.MAP)}
-                  className="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-bold text-white transition-all duration-200 bg-geo-accent font-sans rounded-sm hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-600 shadow-lg shadow-amber-900/20"
-                >
-                  <MapIcon className="mr-3" />
-                  Aceder ao Mapa
-                  <ChevronRight className="ml-2 group-hover:translate-x-1 transition-transform" />
-                </button>
-                 <button 
-                  onClick={() => setCurrentPage(Page.METHODOLOGY)}
-                  className="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-bold text-white transition-all duration-200 bg-slate-800 border border-slate-700 font-sans rounded-sm hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-600 hover:border-slate-500"
-                >
-                  <FileText className="mr-3" />
-                  Metodologia
-                </button>
+              <div className="relative z-10 max-w-3xl space-y-8 animate-in fade-in zoom-in duration-700">
+                <span className="text-geo-accent font-bold tracking-[0.2em] uppercase text-xs md:text-sm border border-geo-accent px-4 py-2 rounded-full inline-block mb-4">
+                  Inteligência Estratégica & Análise de Dados
+                </span>
+                <h2 className="text-4xl md:text-6xl font-serif font-bold text-white leading-tight">
+                  {t('heroTitle', language)}
+                </h2>
+                <p className="text-lg md:text-xl text-slate-300 leading-relaxed max-w-2xl mx-auto">
+                  {t('heroSubtitle', language)}
+                </p>
+                
+                <div className="flex flex-col sm:flex-row justify-center gap-4 pt-4">
+                  <button 
+                    onClick={() => setCurrentPage(Page.MAP)}
+                    className="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-bold text-white transition-all duration-200 bg-geo-accent font-sans rounded-sm hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-600 shadow-lg shadow-amber-900/20"
+                  >
+                    <MapIcon className="mr-3" />
+                    {t('accessMap', language)}
+                    <ChevronRight className="ml-2 group-hover:translate-x-1 transition-transform" />
+                  </button>
+                   <button 
+                    onClick={() => setCurrentPage(Page.METHODOLOGY)}
+                    className="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-bold text-white transition-all duration-200 bg-slate-800 border border-slate-700 font-sans rounded-sm hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-600 hover:border-slate-500"
+                  >
+                    <FileText className="mr-3" />
+                    {t('methodology', language)}
+                  </button>
+                </div>
               </div>
-            </div>
-            
-            {/* Institutional Footer */}
-            <div className="absolute bottom-0 w-full border-t border-slate-800/50 bg-geo-dark/95 backdrop-blur z-20">
-              <div className="max-w-7xl mx-auto px-6 py-6 md:py-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-start text-left">
-                  
-                  {/* Primary Institution */}
-                  <div className="space-y-3">
-                    <h3 className="text-geo-accent font-bold uppercase tracking-wider text-[10px] flex items-center gap-2">
-                      <Building2 size={14} /> Desenvolvimento
-                    </h3>
-                    <p className="text-sm text-slate-300 leading-relaxed">
-                      Desenvolvido pelo <strong className="text-white font-semibold">Grupo de Pesquisa em Sistemas Inteligentes</strong> do <strong className="text-white font-semibold">Instituto de Estudos Avançados em Ciências, Engenharias e Tecnologias (INEACET)</strong>.
-                    </p>
-                  </div>
+              
+              {/* Institutional Footer */}
+              <div className="absolute bottom-0 w-full border-t border-slate-800/50 bg-geo-dark/95 backdrop-blur z-20">
+                <div className="max-w-7xl mx-auto px-6 py-6 md:py-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-start text-left">
+                    
+                    {/* Primary Institution */}
+                    <div className="space-y-3">
+                      <h3 className="text-geo-accent font-bold uppercase tracking-wider text-[10px] flex items-center gap-2">
+                        <Building2 size={14} /> {t('developedBy', language)}
+                      </h3>
+                      <p className="text-sm text-slate-300 leading-relaxed">
+                        {t('researchGroup', language)} - <strong className="text-white font-semibold">{t('institute', language)}</strong>.
+                      </p>
+                    </div>
 
-                  {/* Context & Support */}
-                  <div className="space-y-3">
-                    <h3 className="text-geo-accent font-bold uppercase tracking-wider text-[10px] flex items-center gap-2">
-                      <FlaskConical size={14} /> Aplicação
-                    </h3>
-                    <p className="text-sm text-slate-300 leading-relaxed">
-                      Ferramenta oficial de trabalho para o <strong className="text-white font-semibold">Laboratório de Estudos Avançados em Segurança Internacional e Globalização</strong> do INEACET.
-                    </p>
-                  </div>
+                    {/* Context & Support */}
+                    <div className="space-y-3">
+                      <h3 className="text-geo-accent font-bold uppercase tracking-wider text-[10px] flex items-center gap-2">
+                        <FlaskConical size={14} /> {t('application', language)}
+                      </h3>
+                      <p className="text-sm text-slate-300 leading-relaxed">
+                        <strong className="text-white font-semibold">{t('lab', language)}</strong> (INEACET).
+                      </p>
+                    </div>
 
-                  {/* Partners */}
-                  <div className="space-y-3">
-                    <h3 className="text-geo-accent font-bold uppercase tracking-wider text-[10px] flex items-center gap-2">
-                      <GraduationCap size={14} /> Colaboração Académica
-                    </h3>
-                    <p className="text-sm text-slate-300 leading-relaxed">
-                      Com a participação de investigadores, docentes e estudantes da <span className="text-white">Academia de Ciências Sociais e Tecnologias (ACITE)</span> e do <span className="text-white">Instituto Superior de Angola (ISA)</span>.
-                    </p>
-                  </div>
+                    {/* Partners */}
+                    <div className="space-y-3">
+                      <h3 className="text-geo-accent font-bold uppercase tracking-wider text-[10px] flex items-center gap-2">
+                        <GraduationCap size={14} /> {t('collab', language)}
+                      </h3>
+                      <p className="text-sm text-slate-300 leading-relaxed">
+                        {t('collabText', language)}
+                      </p>
+                    </div>
 
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         )}
 
+        {/* MAP PAGE - No Scroll bars, Full Height */}
         {currentPage === Page.MAP && (
-          <div className="w-full h-full animate-in fade-in duration-500">
+          <div className="w-full h-full animate-in fade-in duration-500 overflow-hidden">
             <AfricaMap 
               onCountryClick={handleCountryClick} 
               countryStatusMap={analyzedCountries}
+              language={language}
             />
           </div>
         )}
 
+        {/* METHODOLOGY PAGE */}
         {currentPage === Page.METHODOLOGY && (
           <div className="w-full h-full overflow-y-auto bg-geo-dark">
-            <MethodologyPage />
+            <MethodologyPage language={language} />
           </div>
         )}
 
+        {/* COMPARE PAGE */}
         {currentPage === Page.COMPARE && (
           <div className="w-full h-full overflow-y-auto bg-geo-dark">
             <ComparisonPage 
               countries={comparisonList} 
               onRemove={handleRemoveFromCompare}
+              language={language}
             />
           </div>
         )}
@@ -232,7 +268,7 @@ const App: React.FC = () => {
             </div>
             
             <div className="text-xs text-slate-300">
-              <span className="font-bold text-white">{comparisonList.length}</span>/3 Países
+              <span className="font-bold text-white">{comparisonList.length}</span>/3
             </div>
 
             <div className="h-6 w-px bg-slate-700"></div>
@@ -242,7 +278,7 @@ const App: React.FC = () => {
               className="bg-geo-accent hover:bg-amber-700 text-white text-sm font-bold px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
             >
               <GitCompare size={16} />
-              Comparar
+              {t('compare', language)}
             </button>
 
             <button 
@@ -264,6 +300,7 @@ const App: React.FC = () => {
         error={errorReport}
         onCompare={handleAddToCompare}
         isComparing={!!reportData && comparisonList.some(c => c.countryName === reportData.countryName)}
+        language={language}
       />
     </div>
   );
