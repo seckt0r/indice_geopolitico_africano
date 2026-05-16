@@ -1,0 +1,13 @@
+# <tipo>[escopo opcional]: <descrição curta em português>
+#
+# <Descrição mais longa explicando o porquê e como (se necessário)>
+#
+# Tipos permitidos:
+# feat: Uma nova funcionalidade
+# fix: Correção de um bug
+# docs: Apenas mudanças na documentação
+# style: Formatação, ponto e vírgula, etc (sem mudança de código)
+# refactor: Refatoração de código (nem nova funcionalidade nem fix)
+# perf: Melhoria de performance
+# test: Adição ou correção de testes
+# chore: Atualizações no processo de build ou ferramentas
