@@ -7,18 +7,64 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
+# Dependency directories
+node_modules/
+jspm_packages/
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
+# Optional npm/yarn/pnpm cache
+.npm
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+
+# Vite / React Build output
+dist/
+dist-ssr/
+build/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Linters cache
+.eslintcache
+.stylelintcache
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# macOS / Windows / Linux
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# IDEs, Editors e Ferramentas
+.idea/
+.project
+*.sublime-workspace
+*.sublime-project
+
+# Exclui tudo na pasta .vscode exceto as configurações recomendadas pro time
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/tasks.json
+!.vscode/launch.json
+
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+
+# Testing
+coverage/
+.nyc_output/
