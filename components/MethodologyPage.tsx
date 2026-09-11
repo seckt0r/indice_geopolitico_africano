@@ -31,6 +31,28 @@ interface ContributionForm {
 
 const EMPTY_FORM: ContributionForm = { name: '', institution: '', email: '', suggestion: '' };
 
+/**
+ * Limites de comprimento por campo.
+ *
+ * Sem eles, o formulário aceita um texto arbitrariamente longo, que ou enche o
+ * armazenamento local do navegador ou segue para o endpoint de recolha como um
+ * pedido desproporcionado. São aplicados no elemento e outra vez na submissão,
+ * porque o atributo `maxLength` só vale para quem escreve pelo teclado.
+ */
+const LIMITES: Record<keyof ContributionForm, number> = {
+  name: 120,
+  institution: 160,
+  email: 254,
+  suggestion: 4000,
+};
+
+const aparar = (form: ContributionForm): ContributionForm => ({
+  name: form.name.trim().slice(0, LIMITES.name),
+  institution: form.institution.trim().slice(0, LIMITES.institution),
+  email: form.email.trim().slice(0, LIMITES.email),
+  suggestion: form.suggestion.trim().slice(0, LIMITES.suggestion),
+});
+
 export const MethodologyPage: React.FC<MethodologyPageProps> = ({ language }) => {
   const [formStatus, setFormStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const [form, setForm] = useState<ContributionForm>(EMPTY_FORM);
@@ -46,7 +68,7 @@ export const MethodologyPage: React.FC<MethodologyPageProps> = ({ language }) =>
     e.preventDefault();
     setFormStatus('submitting');
 
-    const payload = { ...form, language, submittedAt: new Date().toISOString() };
+    const payload = { ...aparar(form), language, submittedAt: new Date().toISOString() };
     const endpoint = import.meta.env.VITE_CONTRIBUTION_ENDPOINT;
 
     try {
@@ -59,8 +81,9 @@ export const MethodologyPage: React.FC<MethodologyPageProps> = ({ language }) =>
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         setStoredLocally(false);
       } else {
-        const existing = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]');
-        localStorage.setItem(STORAGE_KEY, JSON.stringify([...existing, payload]));
+        const existing: unknown = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]');
+        const anteriores = Array.isArray(existing) ? existing.slice(-49) : [];
+        localStorage.setItem(STORAGE_KEY, JSON.stringify([...anteriores, payload]));
         setStoredLocally(true);
       }
       setForm(EMPTY_FORM);
@@ -318,6 +341,7 @@ export const MethodologyPage: React.FC<MethodologyPageProps> = ({ language }) =>
                   value={form.name}
                   onChange={update('name')}
                   required
+                  maxLength={LIMITES.name}
                   type="text"
                   className={inputClass}
                 />
@@ -332,6 +356,7 @@ export const MethodologyPage: React.FC<MethodologyPageProps> = ({ language }) =>
                   value={form.institution}
                   onChange={update('institution')}
                   required
+                  maxLength={LIMITES.institution}
                   type="text"
                   className={inputClass}
                 />
@@ -348,6 +373,7 @@ export const MethodologyPage: React.FC<MethodologyPageProps> = ({ language }) =>
                 value={form.email}
                 onChange={update('email')}
                 required
+                maxLength={LIMITES.email}
                 type="email"
                 className={inputClass}
               />
@@ -363,6 +389,7 @@ export const MethodologyPage: React.FC<MethodologyPageProps> = ({ language }) =>
                 value={form.suggestion}
                 onChange={update('suggestion')}
                 required
+                maxLength={LIMITES.suggestion}
                 rows={4}
                 className={`${inputClass} resize-none`}
               ></textarea>

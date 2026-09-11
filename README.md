@@ -22,6 +22,7 @@ O índice é **pré-calculado antes do deploy** e servido como ficheiro estátic
 ## ✨ Funcionalidades
 
 - ⚡ **Índice pré-calculado:** os 54 Estados chegam ao browser já pontuados e classificados. O mapa abre colorido e o painel preenchido, sem esperar por inferência.
+- 📈 **Histórico por país:** cada geração fica registada, e o painel traça a evolução da classificação ao longo do tempo.
 - 🗺️ **Mapa interativo:** mapa D3 com zoom, filtro por escalão e legenda, à esquerda do ecrã.
 - 📑 **Painel permanente:** o relatório do país seleccionado fica sempre visível à direita, e empilha por baixo do mapa em ecrãs estreitos.
 - 📊 **Comparações detalhadas:** até 3 países lado a lado, com radar pentagonal dos 5 pilares.
@@ -97,30 +98,44 @@ VITE_OLLAMA_MODEL=llama3.2
 - **Visualização de Dados:** D3.js (mapa e radar), Chart.js (pesos dos pilares)
 - **IA:** Ollama local, saída estruturada por JSON Schema
 
-## 🔄 Dados pré-calculados e actualização diária
+## 🗄️ Base de dados e actualização diária
 
 O índice não é calculado no browser do visitante. Um script em Node percorre os
-54 Estados, gera cada relatório com o modelo local e escreve
-`public/dados/relatorios.json`, que a aplicação carrega ao arrancar:
+54 Estados, gera cada relatório com o modelo local e grava-o numa base Postgres
+(Supabase), de onde a aplicação o lê ao arrancar:
 
 ```bash
 npm run dados:gerar                 # incremental: só o que passou das 24 horas
 npm run dados:gerar -- --force      # regenera tudo
 npm run dados:gerar -- --only=AO,GH # apenas estes países
-npm run dados:verificar             # valida o ficheiro antes de publicar
+npm run dados:verificar             # valida o índice que está na base
+npm run dados:importar -- ficheiro.json  # importa um conjunto antigo
 ```
 
-O script é reentrante: grava depois de cada país e continua quando um falha.
+O script é reentrante: grava cada país mal o gera e continua quando um falha.
 O prompt, o schema e o cálculo são exactamente os mesmos da geração a pedido,
 reutilizados de `services/igaService.ts`.
 
-Para manter os dados frescos de 24 em 24 horas, há duas vias. Ambas confirmam o
-ficheiro no repositório, e é esse commit que leva os dados novos a produção:
+Esquema em `db/`, aplicável com psql:
+
+```bash
+psql "$SUPABASE_POSTGRES_URL" -f db/001_esquema.sql
+psql "$SUPABASE_POSTGRES_URL" -f db/002_escrita.sql
+```
+
+Três tabelas: `paises`, `relatorios` (uma linha por geração, nunca substituída)
+e `relatorio_pilares`. A leitura passa por duas funções, `iga_relatorios_actuais`
+e `iga_evolucao`, abertas ao público; a escrita passa por `iga_gravar_relatorio`,
+exclusiva do papel de serviço.
+
+Para manter os dados frescos de 24 em 24 horas:
 
 - **Cron local**, na máquina onde o Ollama corre. Ver `scripts/cron-actualizar.sh`.
 - **GitHub Actions**, em `.github/workflows/actualizar-dados.yml`, num runner
   self-hosted com acesso ao Ollama. Os runners do GitHub não servem: não têm o
   modelo descarregado.
+
+Dados novos **não exigem republicar o site**: o browser lê a base em cada visita.
 
 ## 🚢 Publicação (Vercel)
 
@@ -143,9 +158,9 @@ Depois, em **Settings → Secrets and variables → Actions** do repositório:
 | `VERCEL_ORG_ID`     | campo `orgId` de `.vercel/project.json`     |
 | `VERCEL_PROJECT_ID` | campo `projectId` de `.vercel/project.json` |
 
-`vercel.json` guarda o preset, o comando de build e os cabeçalhos de cache:
-os ficheiros com hash em `assets/` são imutáveis, e `dados/` revalida sempre,
-para que a actualização diária chegue a quem já visitou o site.
+`vercel.json` guarda o preset, o comando de build, os cabeçalhos de cache e os
+cabeçalhos de segurança, entre os quais uma política de conteúdo que proíbe
+scripts de terceiros. Ver `SECURITY.md`.
 
 ## 🧮 Metodologia
 
