@@ -8,7 +8,10 @@
  * Pode ser removida assim que a geração periódica estiver estável.
  */
 
-import { AFRICAN_COUNTRIES } from '../utils/countries';
+// Extensão explícita: em ESM o Node não resolve especificadores sem ela, e é
+// essa a hipótese que esta sonda testa. O TypeScript aceita o sufixo .js a
+// apontar para a fonte .ts, e o Vite também.
+import { AFRICAN_COUNTRIES } from '../utils/countries.js';
 
 interface RespostaNode {
   statusCode: number;
