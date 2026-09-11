@@ -14,7 +14,8 @@
  */
 
 import { DIMENSION_KEYS, DimensionData, DimensionKey, IGAReport, Language, StabilityKey } from '../types';
-import { AiError, generateJson, JsonSchema } from './ollamaClient';
+import { AiError, JsonSchema } from './ollamaClient';
+import { generateJson } from './inference';
 
 // ---------------------------------------------------------------------------
 // Schema da resposta

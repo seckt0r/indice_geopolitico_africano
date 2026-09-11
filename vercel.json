@@ -6,11 +6,20 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/((?!api/).*)",
       "destination": "/index.html"
     }
   ],
   "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        }
+      ]
+    },
     {
       "source": "/assets/(.*)",
       "headers": [
@@ -61,6 +70,12 @@
           "value": "same-origin"
         }
       ]
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/gerar",
+      "schedule": "0 3 * * *"
     }
   ]
 }

@@ -137,6 +137,29 @@ Para manter os dados frescos de 24 em 24 horas:
 
 Dados novos **não exigem republicar o site**: o browser lê a base em cada visita.
 
+### Geração periódica no próprio Vercel
+
+Há ainda uma terceira via, que não depende de nenhuma máquina sua estar ligada:
+`api/cron/gerar.ts` é uma função invocada diariamente pelo Vercel Cron, com o
+agendamento declarado em `vercel.json`.
+
+Duas coisas a saber antes de contar com ela:
+
+1. **A inferência deixa de ser local.** Uma função na nuvem não alcança o Ollama
+   da sua máquina, por isso usa modelos alojados através do AI Gateway do
+   Vercel. Isso implica registar um cartão na conta Vercel e passa a haver custo
+   por tokens, ao contrário do modelo local.
+2. **Uma execução não cobre o continente.** A função tem tempo máximo e por isso
+   respeita um orçamento, gerando o que couber e devolvendo o resto para a
+   execução seguinte. Com o limite de 60 segundos do plano gratuito são dois a
+   quatro países por dia; com os 800 segundos do plano Pro, quase o continente
+   inteiro de uma vez.
+
+Configurar no projecto Vercel: `CRON_SECRET`, que autentica o agendador e sem o
+qual o endpoint fica desactivado, e opcionalmente `AI_GATEWAY_MODEL` e
+`IGA_CRON_MAX_DURATION`. A chave de serviço do Supabase já lá está, vinda da
+integração.
+
 ## 🚢 Publicação (Vercel)
 
 Cada push para `main` publica em produção; cada pull request publica uma
