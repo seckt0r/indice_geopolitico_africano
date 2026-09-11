@@ -243,6 +243,28 @@ export const clearReportCache = (): void => {
 };
 
 /**
+ * Carrega relatórios pré-calculados para dentro da cache.
+ *
+ * O conjunto estático gerado na compilação entra por aqui ao arrancar a
+ * aplicação. A partir desse momento, abrir um país é instantâneo e a geração a
+ * pedido fica reservada para o que não vem no conjunto — um idioma diferente,
+ * ou um país cuja geração falhou na última execução do script.
+ *
+ * Não sobrepõe um relatório já em cache: uma geração feita nesta sessão é mais
+ * recente do que o ficheiro que veio do servidor.
+ */
+export const hydrateReports = (reports: IGAReport[], lang: Language): number => {
+  let loaded = 0;
+  for (const report of reports) {
+    const key = cacheKey(report.id, lang);
+    if (cache.has(key)) continue;
+    cache.set(key, report);
+    loaded += 1;
+  }
+  return loaded;
+};
+
+/**
  * Obtém o relatório IGA de um país.
  * Devolve imediatamente do cache quando possível; pedidos concorrentes para o
  * mesmo país/idioma partilham a mesma promessa em vez de duplicar trabalho.

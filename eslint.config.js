@@ -31,5 +31,11 @@ export default tseslint.config(
   {
     files: ['*.config.js', '*.config.ts'],
     languageOptions: { globals: globals.node },
+  },
+  {
+    // Os scripts de dados correm em Node, não no browser: precisam de process,
+    // console e do resto dos globais da plataforma.
+    files: ['scripts/**/*.{js,mjs,ts}'],
+    languageOptions: { globals: globals.node },
   }
 );

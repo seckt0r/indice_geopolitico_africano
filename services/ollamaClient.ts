@@ -16,15 +16,51 @@
  * completamente problemas de CORS e permite servir a app em 0.0.0.0.
  */
 
-const env = import.meta.env;
+/**
+ * Configuração tolerante ao ambiente.
+ *
+ * No browser a configuração vem de `import.meta.env` (prefixo VITE_); no Node
+ * vem de `process.env`. Isto existe porque o script que pré-calcula o índice na
+ * compilação (`scripts/gerar-relatorios.ts`) reutiliza este mesmo cliente: o
+ * prompt, o schema e a validação têm de existir num só sítio, sob pena de a
+ * versão gerada em build divergir da gerada a pedido.
+ */
+const viteEnv: Record<string, string | undefined> =
+  (import.meta as unknown as { env?: Record<string, string | undefined> }).env ?? {};
+const nodeEnv: Record<string, string | undefined> =
+  typeof process !== 'undefined' && process.env ? process.env : {};
+const IS_NODE = typeof process !== 'undefined' && Boolean(process.versions?.node);
 
-export const OLLAMA_URL: string = env.VITE_OLLAMA_URL || '/ollama';
-export const OLLAMA_MODEL: string = env.VITE_OLLAMA_MODEL || 'qwen3:8b';
+const readEnv = (...keys: string[]): string | undefined => {
+  for (const key of keys) {
+    const value = viteEnv[key] ?? nodeEnv[key];
+    if (value) return value;
+  }
+  return undefined;
+};
+
+/**
+ * Base da API.
+ *
+ * No browser falamos com "/ollama", que o Vite encaminha. Em Node não existe
+ * proxy nenhum, por isso uma base relativa — que é o valor habitual de
+ * VITE_OLLAMA_URL no .env — não serve e é descartada a favor do host directo.
+ */
+const resolveUrl = (): string => {
+  const configured = readEnv('VITE_OLLAMA_URL');
+  if (!IS_NODE) return configured ?? '/ollama';
+  if (configured && /^https?:\/\//i.test(configured)) return configured;
+  return readEnv('OLLAMA_HOST') ?? 'http://127.0.0.1:11434';
+};
+
+export const OLLAMA_URL: string = resolveUrl();
+export const OLLAMA_MODEL: string = readEnv('VITE_OLLAMA_MODEL', 'OLLAMA_MODEL') ?? 'qwen3:8b';
 // 15 minutos. Medido nesta máquina: um relatório completo (~1500 tokens) demora
 // 8m49s em CPU, a cerca de 2,8 tokens/s. Um timeout de 5 minutos cortaria
 // praticamente todos os pedidos a meio.
-export const OLLAMA_TIMEOUT_MS: number = Number(env.VITE_OLLAMA_TIMEOUT_MS) || 900_000;
-const NUM_CTX: number = Number(env.VITE_OLLAMA_NUM_CTX) || 8192;
+export const OLLAMA_TIMEOUT_MS: number =
+  Number(readEnv('VITE_OLLAMA_TIMEOUT_MS', 'OLLAMA_TIMEOUT_MS')) || 900_000;
+const NUM_CTX: number = Number(readEnv('VITE_OLLAMA_NUM_CTX', 'OLLAMA_NUM_CTX')) || 8192;
 
 /** Tipos de falha distinguíveis, para a UI poder dar uma mensagem útil. */
 export type AiErrorKind =

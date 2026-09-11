@@ -4,21 +4,61 @@
 
 @layer base {
   body {
-    @apply bg-geo-dark text-geo-text;
+    @apply bg-geo-paper text-geo-body antialiased;
+    font-feature-settings: 'cv02', 'cv03', 'cv04';
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply text-geo-ink;
+    text-wrap: balance;
+  }
+
+  /* Numerais tabulares em todos os valores do índice: colunas de pontuações
+     alinham verticalmente sem largura fixa. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
   }
 }
 
-/* Scrollbar personalizada (WebKit) */
+@layer components {
+  /* Eyebrow: rótulo curto em versalete que abre cada secção. */
+  .eyebrow {
+    @apply text-[11px] font-semibold uppercase tracking-[0.18em] text-geo-accent;
+  }
+
+  .card {
+    @apply bg-geo-surface border border-geo-line rounded-xl shadow-card;
+  }
+
+  /* Régua fina sob os títulos de secção, no lugar das caixas escuras. */
+  .rule {
+    @apply border-b border-geo-line pb-4 mb-8;
+  }
+}
+
+/* Scrollbar personalizada (WebKit), agora em tons claros. */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 10px;
+  height: 10px;
 }
 ::-webkit-scrollbar-track {
-  background: #1e293b;
+  background: #f3f1ec;
 }
 ::-webkit-scrollbar-thumb {
-  background: #475569;
-  border-radius: 4px;
+  background: #cec7b8;
+  border-radius: 6px;
+  border: 2px solid #f3f1ec;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #64748b;
+  background: #b3a994;
+}
+
+/* Foco visível e consistente em toda a aplicação. */
+:focus-visible {
+  outline: 2px solid #123a5e;
+  outline-offset: 2px;
+  border-radius: 2px;
 }

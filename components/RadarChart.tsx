@@ -40,7 +40,7 @@ export const RadarChart: React.FC<RadarChartProps> = ({ data, colors, language }
       .attr('class', 'grid-circle')
       .attr('r', (d) => rScale(d))
       .style('fill', 'none')
-      .style('stroke', '#334155')
+      .style('stroke', '#d9d3c6')
       .style('stroke-dasharray', '4,4')
       .style('stroke-width', '0.5px');
 
@@ -53,7 +53,7 @@ export const RadarChart: React.FC<RadarChartProps> = ({ data, colors, language }
       .attr('y', (d) => -rScale(d))
       .attr('dy', '0.4em')
       .style('font-size', '10px')
-      .attr('fill', '#64748b')
+      .attr('fill', '#6e7887')
       .text((d) => d.toString());
 
     const axis = g.selectAll('.axis').data(PILLARS).enter().append('g').attr('class', 'axis');
@@ -64,7 +64,7 @@ export const RadarChart: React.FC<RadarChartProps> = ({ data, colors, language }
       .attr('y1', 0)
       .attr('x2', (_d, i) => rScale(100) * Math.cos(angleSlice * i - Math.PI / 2))
       .attr('y2', (_d, i) => rScale(100) * Math.sin(angleSlice * i - Math.PI / 2))
-      .attr('stroke', '#475569')
+      .attr('stroke', '#cec7b8')
       .attr('stroke-width', '1px');
 
     // Os rótulos dos eixos passaram a ser traduzidos. Antes eram abreviaturas
@@ -74,7 +74,7 @@ export const RadarChart: React.FC<RadarChartProps> = ({ data, colors, language }
       .style('font-size', '11px')
       .style('font-weight', 'bold')
       .attr('text-anchor', 'middle')
-      .attr('fill', '#94a3b8')
+      .attr('fill', '#3b4859')
       .attr('dy', '0.35em')
       .attr('x', (_d, i) => rScale(118) * Math.cos(angleSlice * i - Math.PI / 2))
       .attr('y', (_d, i) => rScale(118) * Math.sin(angleSlice * i - Math.PI / 2))
@@ -95,12 +95,12 @@ export const RadarChart: React.FC<RadarChartProps> = ({ data, colors, language }
         .style('stroke-width', 2)
         .style('stroke', colors[idx])
         .style('fill', colors[idx])
-        .style('fill-opacity', 0.15)
+        .style('fill-opacity', 0.12)
         .on('mouseover', function () {
-          d3.select(this).style('fill-opacity', 0.5);
+          d3.select(this).style('fill-opacity', 0.28);
         })
         .on('mouseout', function () {
-          d3.select(this).style('fill-opacity', 0.15);
+          d3.select(this).style('fill-opacity', 0.12);
         });
 
       g.selectAll(`.dot-${idx}`)
@@ -111,7 +111,7 @@ export const RadarChart: React.FC<RadarChartProps> = ({ data, colors, language }
         .attr('cy', (d, i) => rScale(d.value) * Math.sin(angleSlice * i - Math.PI / 2))
         .attr('r', 4)
         .style('fill', colors[idx])
-        .style('stroke', '#0f172a')
+        .style('stroke', '#ffffff')
         .style('stroke-width', 2);
     });
   }, [data, colors, language]);

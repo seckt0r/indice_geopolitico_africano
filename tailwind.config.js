@@ -12,17 +12,34 @@ export default {
   theme: {
     extend: {
       colors: {
+        // Paleta clara de tom académico. Papel levemente quente, tinta fria,
+        // azul institucional para hierarquia e ocre para destaques pontuais.
         geo: {
-          dark: '#0f172a',
-          panel: '#1e293b',
-          accent: '#d97706', // Amber-600
-          text: '#e2e8f0',
-          muted: '#94a3b8',
+          paper: '#faf9f6', // fundo da página
+          surface: '#ffffff', // cartões e painéis
+          subtle: '#f3f1ec', // faixas e zebra
+          line: '#e5e1d8', // contornos normais
+          strong: '#cec7b8', // contornos com ênfase
+          ink: '#16202e', // títulos
+          body: '#3b4859', // texto corrido
+          muted: '#6e7887', // legendas e metadados
+          primary: '#123a5e', // azul institucional
+          primarySoft: '#eaf0f5',
+          accent: '#a76b16', // ocre para eyebrows e realces
+          accentSoft: '#fbf3e4',
         },
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
-        serif: ['Merriweather', 'Georgia', 'serif'],
+        serif: ['"Source Serif 4"', 'Merriweather', 'Georgia', 'serif'],
+        mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+      },
+      boxShadow: {
+        card: '0 1px 2px rgba(22, 32, 46, 0.04), 0 8px 24px -12px rgba(22, 32, 46, 0.12)',
+        lift: '0 2px 4px rgba(22, 32, 46, 0.05), 0 18px 40px -20px rgba(22, 32, 46, 0.25)',
+      },
+      maxWidth: {
+        prose: '68ch',
       },
     },
   },
