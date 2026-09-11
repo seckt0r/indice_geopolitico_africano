@@ -35,13 +35,60 @@ const DURACAO_MAXIMA_S = Number(process.env.IGA_CRON_MAX_DURATION) || 60;
 /** Margem para fechar a resposta antes de a função ser terminada à força. */
 const MARGEM_MS = 8_000;
 
-const naoAutorizado = (motivo: string): Response =>
-  new Response(JSON.stringify({ erro: motivo }), {
-    status: 401,
-    headers: { 'Content-Type': 'application/json' },
-  });
+/**
+ * Adaptador de assinatura.
+ *
+ * O runtime Node do Vercel invoca a função ora com a assinatura web
+ * (`Request` → `Response`), ora com a assinatura clássica do Node
+ * (`req`, `res`), conforme a configuração do projecto. Assumir uma delas dava
+ * `FUNCTION_INVOCATION_FAILED` logo à entrada, quando `request.headers.get`
+ * não existia. Detectar qual é custa vinte linhas e elimina a adivinhação.
+ */
+interface RespostaNode {
+  statusCode: number;
+  setHeader: (nome: string, valor: string) => void;
+  end: (corpo: string) => void;
+}
 
-export default async function handler(request: Request): Promise<Response> {
+interface PedidoNode {
+  headers: Record<string, string | string[] | undefined>;
+  url?: string;
+}
+
+const ehPedidoWeb = (valor: unknown): valor is Request =>
+  typeof (valor as Request | undefined)?.headers?.get === 'function';
+
+const lerCabecalho = (pedido: Request | PedidoNode, nome: string): string => {
+  if (ehPedidoWeb(pedido)) return pedido.headers.get(nome) ?? '';
+  const valor = pedido.headers[nome] ?? pedido.headers[nome.toLowerCase()];
+  return Array.isArray(valor) ? (valor[0] ?? '') : (valor ?? '');
+};
+
+const lerUrl = (pedido: Request | PedidoNode): URL => {
+  const bruto = ehPedidoWeb(pedido) ? pedido.url : (pedido.url ?? '/');
+  // A base só serve para o URL ser analisável; nenhum campo dela é usado.
+  return new URL(bruto, 'http://localhost');
+};
+
+const responder = (corpo: unknown, estado: number, res?: RespostaNode): Response | void => {
+  const texto = JSON.stringify(corpo, null, 2);
+  if (res) {
+    res.statusCode = estado;
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Cache-Control', 'no-store');
+    res.end(texto);
+    return;
+  }
+  return new Response(texto, {
+    status: estado,
+    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
+  });
+};
+
+export default async function handler(
+  request: Request | PedidoNode,
+  res?: RespostaNode
+): Promise<Response | void> {
   const inicio = Date.now();
 
   /**
@@ -51,12 +98,34 @@ export default async function handler(request: Request): Promise<Response> {
    */
   const segredo = process.env.CRON_SECRET;
   if (!segredo) {
-    return naoAutorizado('CRON_SECRET não está definido no projecto. Endpoint desactivado.');
+    return responder({ erro: 'CRON_SECRET não está definido no projecto. Endpoint desactivado.' }, 401, res);
   }
-  if (request.headers.get('authorization') !== `Bearer ${segredo}`) {
-    return naoAutorizado('Pedido não autorizado.');
+  if (lerCabecalho(request, 'authorization') !== `Bearer ${segredo}`) {
+    return responder({ erro: 'Pedido não autorizado.' }, 401, res);
   }
 
+  try {
+    return await executar(request, res, inicio);
+  } catch (err) {
+    // Um erro não tratado sai da plataforma como FUNCTION_INVOCATION_FAILED,
+    // sem nada que se leia. Devolver a causa poupa uma ida aos registos.
+    return responder(
+      {
+        erro: 'A geração falhou.',
+        causa: err instanceof Error ? err.message : String(err),
+        duracaoMs: Date.now() - inicio,
+      },
+      500,
+      res
+    );
+  }
+}
+
+async function executar(
+  request: Request | PedidoNode,
+  res: RespostaNode | undefined,
+  inicio: number
+): Promise<Response | void> {
   // Importados aqui e não no topo: assim um pedido não autorizado não paga o
   // custo de carregar os clientes nem de ler configuração.
   const { rpc, SUPABASE_SERVICE_KEY, SUPABASE_URL } = await import('../../services/supabaseClient');
@@ -64,13 +133,10 @@ export default async function handler(request: Request): Promise<Response> {
   const { activeModel, activeProvider } = await import('../../services/inference');
 
   if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
-    return new Response(
-      JSON.stringify({ erro: 'Falta a configuração da base de dados ou a chave de serviço.' }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
+    return responder({ erro: 'Falta a configuração da base de dados ou a chave de serviço.' }, 500, res);
   }
 
-  const url = new URL(request.url);
+  const url = lerUrl(request);
   const idioma = (url.searchParams.get('lang') ?? 'pt') as Language;
   const validadeMs = (Number(url.searchParams.get('max-age')) || 24) * 60 * 60 * 1000;
   const orcamentoMs = DURACAO_MAXIMA_S * 1000 - MARGEM_MS;
@@ -129,8 +195,5 @@ export default async function handler(request: Request): Promise<Response> {
 
   // Falhas não devolvem 500: a execução fez o que pôde e a próxima continua.
   // Um 500 só assinalaria ruído no painel do Vercel.
-  return new Response(JSON.stringify(resumo, null, 2), {
-    status: 200,
-    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
-  });
+  return responder(resumo, 200, res);
 }
