@@ -87,12 +87,29 @@ jobs:
 
       # Construir aqui, e não no Vercel, mantém o mesmo artefacto que passou
       # pelos testes de qualidade e permite falhar antes de publicar.
-      - name: Construir
+      # O `vercel build` NÃO encaminha o ambiente do runner para o comando de
+      # build — di-lo no seu próprio aviso, "System environment variables will
+      # not be available". Passar a configuração por variável de ambiente
+      # resultava num pacote sem endereço de base nenhum. O Vite, esse, lê os
+      # ficheiros .env da raiz, por isso é por ficheiro que ela viaja.
+      - name: Preparar a configuração pública da base
         env:
-          # Lidas pelo vite.config.ts e embutidas no pacote. Ambas são públicas
-          # por desenho: quem protege o índice é a segurança ao nível da linha.
           SUPABASE_URL: ${{ vars.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY }}
+        run: |
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then
+            echo "::error::Faltam as variáveis SUPABASE_URL e SUPABASE_ANON_KEY. Defina-as em Settings → Secrets and variables → Actions → Variables."
+            exit 1
+          fi
+          # Ambas são públicas por desenho: viajam no pacote JavaScript e quem
+          # protege o índice é a segurança ao nível da linha, não o segredo.
+          {
+            printf 'VITE_SUPABASE_URL=%s\n' "$SUPABASE_URL"
+            printf 'VITE_SUPABASE_ANON_KEY=%s\n' "$SUPABASE_ANON_KEY"
+          } > .env.production.local
+          echo "Configuração escrita para .env.production.local."
+
+      - name: Construir
         run: |
           if [ "$PRODUCAO" = "true" ]; then
             vercel build --prod --token="${{ secrets.VERCEL_TOKEN }}"
@@ -104,9 +121,21 @@ jobs:
       # vite.config.ts. Sem ela o pacote sai sem saber onde está o índice, e o
       # mapa chega ao visitante sem cor nenhuma.
       - name: Confirmar que o pacote sabe ler o índice
+        env:
+          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
         run: |
-          if ! grep -rqF "supabase.co" .vercel/output/static/assets/*.js; then
-            echo "::error::O pacote construído não contém o endereço da base. Verifica as variáveis SUPABASE_URL e SUPABASE_ANON_KEY."
+          estatico=".vercel/output/static"
+          if [ ! -d "$estatico" ]; then
+            echo "::error::$estatico não existe. O build não produziu artefacto."
+            exit 1
+          fi
+          # Procura recursiva na árvore, e não por padrão de ficheiro: um glob
+          # sem correspondência faz o grep falhar por motivo errado e esconde
+          # a causa real.
+          if ! grep -rqF "$SUPABASE_URL" "$estatico"; then
+            echo "::error::O pacote construído não contém o endereço da base."
+            echo "Conteúdo de $estatico:"
+            find "$estatico" -maxdepth 2 -type f | head -20
             exit 1
           fi
           echo "Configuração da base presente no pacote."

@@ -109,7 +109,7 @@ export const EvolutionChart: React.FC<EvolutionChartProps> = ({ points, language
                 width={AREA_W}
                 height={altura}
                 fill={STABILITY_COLORS[banda.key]}
-                opacity={0.07}
+                opacity={0.16}
               />
               {altura >= 14 && (
                 <text
