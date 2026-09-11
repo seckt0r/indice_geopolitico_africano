@@ -24,6 +24,9 @@ dist/
 dist-ssr/
 build/
 
+# Documentação e artigos
+docs/
+
 # TypeScript cache
 *.tsbuildinfo
 
@@ -68,3 +71,9 @@ Desktop.ini
 # Testing
 coverage/
 .nyc_output/
+
+# Harness e Ontologia (documentação de trabalho local, não versionada)
+CLAUDE.md
+AGENTS.md
+harness/
+ontology/

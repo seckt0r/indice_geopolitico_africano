@@ -2,58 +2,102 @@
 
 # 🌍 Catálogo da Geopolítica de África (IGA)
 
-**Um panorama interativo e baseado em IA sobre mapas, comparações e dados geopolíticos africanos.**
+**Um panorama interativo sobre mapas, comparações e dados geopolíticos africanos, com análise gerada por IA local.**
 
 [![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org/)
 [![Vite](https://img.shields.io/badge/Vite-B73BFE?style=for-the-badge&logo=vite&logoColor=FFD62E)](https://vitejs.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Google Gemini API](https://img.shields.io/badge/Google%20Gemini-4285F4?style=for-the-badge&logo=google&logoColor=white)](https://deepmind.google/technologies/gemini/)
+[![Ollama](https://img.shields.io/badge/Ollama-000000?style=for-the-badge&logo=ollama&logoColor=white)](https://ollama.com/)
 
 </div>
 
 ## 📖 Sobre o Projeto
 
-O **Catálogo da Geopolítica de África** é uma aplicação React desenvolvida para visualizar, comparar e analisar dados geopolíticos de vários países em África. Integrado com a inteligência artificial do **Google Gemini**, o catálogo apresenta visualizações detalhadas, como Gráficos Radar e Mapas em D3.js.
+O **Catálogo da Geopolítica de África** é uma aplicação React para visualizar, comparar e analisar dados geopolíticos de países africanos através do **Índice Geopolítico Africano (IGA)**.
+
+A análise é gerada por um **modelo de linguagem que corre localmente** (via [Ollama](https://ollama.com/)), por omissão o `qwen3:8b`. Nada é enviado para serviços externos e **não existe nenhuma chave de API**.
 
 ## ✨ Funcionalidades
 
-- 🗺️ **Mapa Interativo Africano:** Explore diferentes regiões através de componentes interativos e gráficos dinâmicos.
-- 📊 **Comparações Detalhadas:** Avalie indicadores geopolíticos de múltiplos países baseados em dados robustos visualizados via `Chart.js` e `D3.js`.
-- 🧠 **Análise Inteligente (Gemini AI):** Resumos gerados por inteligência artificial através de uma integração com a API GenAI do Google.
+- 🗺️ **Mapa Interativo Africano:** Mapa D3 com zoom, filtro por nível de estabilidade e legenda.
+- 📊 **Comparações Detalhadas:** Até 3 países lado a lado, com radar pentagonal dos 5 pilares.
+- 🧠 **Análise Local (Ollama):** Relatórios gerados na sua máquina, sem custos de API nem envio de dados.
+- 🌐 **8 idiomas:** PT, EN, FR, ES, DE, IT, RU, ZH.
 
 ## 🚀 Como Executar Localmente
 
-**Pré-requisitos:** Node.js v18 ou superior.
+**Pré-requisitos:** Node.js v20 ou superior e [Ollama](https://ollama.com/download) instalado.
 
-1. **Clone e instale as dependências:**
+1. **Prepare o modelo local:**
+
+   ```bash
+   ollama serve          # se ainda não estiver a correr
+   ollama pull qwen3:8b  # ~5 GB
+   ```
+
+2. **Instale as dependências:**
 
    ```bash
    npm install
    ```
 
-2. **Configure as Variáveis de Ambiente:**
-   Crie um arquivo `.env` na raiz do projeto e defina a chave da API do Gemini:
+3. **Configure o ambiente (opcional):**
 
-   ```env
-   VITE_GEMINI_API_KEY=sua_chave_de_api_aqui
-   ```
+   Os valores por omissão funcionam sem qualquer configuração. Para ajustar,
+   copie o exemplo e edite:
 
-3. **Inicie a Aplicação:**
    ```bash
-   npm run dev
+   cp .env.example .env
    ```
 
-## 🛠️ Tecnologias Utilizadas
+4. **Inicie a Aplicação:**
 
-- **Core:** React 19, TypeScript, Vite
-- **Visualização de Dados:** D3.js, Chart.js
-- **Integração de IA:** `@google/genai`
-- **Ícones & UI:** Lucide React
+   ```bash
+   npm run dev   # http://localhost:3000
+   ```
 
-## 🤝 Contribuindo
+### ⏱️ Sobre o desempenho
 
-Por favor, veja o arquivo [CONTRIBUTING.md](CONTRIBUTING.md) para detalhes sobre as boas práticas para submeter pull requests e reportar issues usando os templates do `.github`.
+Um relatório completo tem cerca de 1500 tokens. **Numa máquina sem GPU isto demora
+entre 4 e 9 minutos** — o `qwen3:8b` roda a ~3 tokens/s em CPU. A interface mostra
+um contador de tempo decorrido, e cada relatório fica em cache durante a sessão,
+pelo que reabrir um país já analisado é instantâneo.
 
-## 📜 Licença
+Com GPU o tempo cai drasticamente. Para hardware mais modesto, considere um modelo
+mais pequeno:
 
-Distribuído sob a licença [MIT](https://opensource.org/licenses/MIT). Veja `LICENSE` para mais informações.
+```bash
+ollama pull llama3.2
+# depois, no .env:
+VITE_OLLAMA_MODEL=llama3.2
+```
+
+## 🛠️ Scripts
+
+| Comando             | O que faz                                |
+| ------------------- | ---------------------------------------- |
+| `npm run dev`       | Servidor de desenvolvimento (porta 3000) |
+| `npm run build`     | Verifica tipos e constrói para `dist/`   |
+| `npm run preview`   | Serve o build                            |
+| `npm run typecheck` | `tsc --noEmit`                           |
+| `npm run lint`      | ESLint                                   |
+| `npm run format`    | Prettier                                 |
+
+## 🧱 Tecnologias Utilizadas
+
+- **Core:** React 19, TypeScript, Vite 6
+- **Estilo:** Tailwind CSS 3 (em build) + `tailwindcss-animate`
+- **Visualização de Dados:** D3.js (mapa e radar), Chart.js (pesos dos pilares)
+- **IA:** Ollama local, saída estruturada por JSON Schema
+
+## 🧮 Metodologia
+
+O IGA é a média aritmética simples de 5 pilares com peso igual (20% cada):
+capacidade económica, governação, segurança interna, influência internacional e
+trajetória histórica. A página **Metodologia** da aplicação detalha cada um.
+
+> **Nota importante:** as pontuações são **estimativas produzidas por um modelo de
+> linguagem**, não medições verificadas. As fontes listadas são citações declaradas
+> pelo modelo e não são validadas automaticamente. O `igaScore` e o nível de
+> estabilidade são recalculados no cliente a partir das pontuações dos pilares —
+> a aritmética não é delegada ao modelo.

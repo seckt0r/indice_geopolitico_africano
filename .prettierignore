@@ -1,0 +1,8 @@
+node_modules
+dist
+package-lock.json
+migrated_prompt_history
+harness
+ontology
+CLAUDE.md
+docs

@@ -6,6 +6,8 @@ export const LoadingSpinner: React.FC = () => (
       <div className="absolute top-0 left-0 w-full h-full border-4 border-geo-panel rounded-full"></div>
       <div className="absolute top-0 left-0 w-full h-full border-4 border-geo-accent rounded-full animate-spin border-t-transparent"></div>
     </div>
-    <p className="text-geo-accent font-mono text-sm animate-pulse">Consultando Satélites e Bases de Dados...</p>
+    <p className="text-geo-accent font-mono text-sm animate-pulse">
+      Consultando Satélites e Bases de Dados...
+    </p>
   </div>
 );
