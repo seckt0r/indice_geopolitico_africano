@@ -1,0 +1,87 @@
+# Actualização diária do índice pré-calculado.
+#
+# Corre num runner self-hosted porque a geração precisa de uma instância do
+# Ollama com o modelo descarregado — coisa que os runners do GitHub não têm.
+# Configura um runner na máquina onde o `ollama serve` está a correr e dá-lhe
+# a etiqueta `ollama`.
+#
+# Alternativa sem CI: a mesma coisa por cron local. Ver scripts/cron-actualizar.sh.
+
+name: Actualizar dados do IGA
+
+on:
+  schedule:
+    # 03:00 UTC todos os dias. O intervalo de validade no script é de 24 horas,
+    # por isso uma execução diária regenera tudo sem esforço desperdiçado.
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+    inputs:
+      force:
+        description: 'Regenerar todos os países, ignorando a validade'
+        type: boolean
+        default: false
+
+concurrency:
+  # Uma passagem completa pode demorar bastante; nunca duas ao mesmo tempo.
+  group: dados-iga
+  cancel-in-progress: false
+
+jobs:
+  gerar:
+    name: Gerar e confirmar
+    runs-on: [self-hosted, ollama]
+    timeout-minutes: 600
+    permissions:
+      contents: write
+    outputs:
+      alterou: ${{ steps.confirmar.outputs.alterou }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Gerar relatórios
+        env:
+          OLLAMA_HOST: ${{ vars.OLLAMA_HOST || 'http://127.0.0.1:11434' }}
+          OLLAMA_MODEL: ${{ vars.OLLAMA_MODEL || 'qwen3:latest' }}
+        run: npm run dados:gerar -- ${{ inputs.force && '--force' || '' }}
+
+      # Nunca confirmar um conjunto inválido: seria publicado na mesma e só se
+      # notaria no browser do visitante.
+      - name: Validar o conjunto
+        run: npm run dados:verificar
+
+      - name: Confirmar alterações
+        id: confirmar
+        run: |
+          if git diff --quiet -- public/dados; then
+            echo "Sem alterações nos dados."
+            echo "alterou=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git config user.name  'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add public/dados
+          git commit -m "chore(dados): actualizar índice IGA
+
+          Geração automática diária dos 54 relatórios."
+          git push
+          echo "alterou=true" >> "$GITHUB_OUTPUT"
+
+  # Um push feito com o GITHUB_TOKEN não dispara outros workflows, por desenho
+  # do GitHub. Sem esta chamada explícita, os dados novos ficavam no repositório
+  # e nunca chegavam a produção.
+  publicar:
+    name: Publicar dados novos
+    needs: gerar
+    if: needs.gerar.outputs.alterou == 'true'
+    uses: ./.github/workflows/deploy-vercel.yml
+    with:
+      ambiente: production
+    secrets: inherit

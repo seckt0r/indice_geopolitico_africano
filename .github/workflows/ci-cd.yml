@@ -1,0 +1,111 @@
+# Integração e entrega contínuas.
+#
+# Substitui o antigo ci.yml, que só verificava. A verificação passou a ser a
+# porta da publicação: nada chega ao Vercel sem passar pelos mesmos quatro
+# testes que corriam antes.
+#
+#   pull request  →  qualidade  →  pré-visualização (URL comentado no PR)
+#   push em main  →  qualidade  →  produção
+
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  # Um novo push à mesma referência torna o anterior irrelevante — excepto em
+  # main, onde cancelar a meio deixaria produção por publicar.
+  group: ci-cd-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  qualidade:
+    name: Qualidade
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: npm
+
+      - run: npm ci
+
+      # O `vite build` usa esbuild e NÃO verifica tipos. Sem este passo, um erro
+      # de TypeScript passava no CI sem ninguém dar por isso.
+      - name: Verificação de tipos
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Formatação
+        run: npm run format:check
+
+      - name: Build
+        run: npm run build
+
+      # O site vive do conjunto pré-calculado: um ficheiro truncado publicado
+      # dá um mapa sem cor e um painel vazio. Falha aqui, não em produção.
+      - name: Validar o conjunto de dados
+        run: npm run dados:verificar
+
+  previsualizacao:
+    name: Pré-visualização
+    needs: qualidade
+    if: github.event_name == 'pull_request'
+    uses: ./.github/workflows/deploy-vercel.yml
+    with:
+      ambiente: preview
+    secrets: inherit
+
+  comentar-previsualizacao:
+    name: Comentar o URL no PR
+    needs: previsualizacao
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const url = '${{ needs.previsualizacao.outputs.url }}';
+            const marca = '<!-- previsualizacao-vercel -->';
+            const corpo = `${marca}\n**Pré-visualização publicada:** ${url}`;
+
+            // Actualiza o comentário existente em vez de acumular um por push.
+            const { data: comentarios } = await github.rest.issues.listComments({
+              ...context.repo,
+              issue_number: context.issue.number,
+            });
+            const anterior = comentarios.find((c) => c.body?.includes(marca));
+
+            if (anterior) {
+              await github.rest.issues.updateComment({
+                ...context.repo,
+                comment_id: anterior.id,
+                body: corpo,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                ...context.repo,
+                issue_number: context.issue.number,
+                body: corpo,
+              });
+            }
+
+  producao:
+    name: Produção
+    needs: qualidade
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/deploy-vercel.yml
+    with:
+      ambiente: production
+    secrets: inherit

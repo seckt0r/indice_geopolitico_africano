@@ -1,0 +1,133 @@
+# Publicação no Vercel.
+#
+# É um workflow reutilizável: serve tanto o push para `main` (via ci-cd.yml)
+# como a actualização diária dos dados (via actualizar-dados.yml). Existir num
+# só sítio evita que as duas vias divirjam.
+#
+# Segredos necessários no repositório (Settings → Secrets and variables →
+# Actions). Os dois IDs saem de `.vercel/project.json` depois de correr
+# `npx vercel link` uma vez:
+#   VERCEL_TOKEN       token pessoal ou de equipa
+#   VERCEL_ORG_ID      orgId
+#   VERCEL_PROJECT_ID  projectId
+
+name: Publicar no Vercel
+
+on:
+  workflow_call:
+    inputs:
+      ambiente:
+        description: 'production ou preview'
+        type: string
+        default: production
+    outputs:
+      url:
+        description: 'URL da publicação'
+        value: ${{ jobs.publicar.outputs.url }}
+  workflow_dispatch:
+    inputs:
+      ambiente:
+        description: 'Ambiente a publicar'
+        type: choice
+        options: [production, preview]
+        default: production
+
+concurrency:
+  # Nunca duas publicações em produção ao mesmo tempo: a segunda ganharia a
+  # corrida pelo alias e poderia repor uma versão anterior.
+  group: vercel-${{ inputs.ambiente || 'production' }}
+  cancel-in-progress: false
+
+jobs:
+  publicar:
+    name: Publicar (${{ inputs.ambiente || 'production' }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: ${{ inputs.ambiente || 'production' }}
+      url: ${{ steps.deploy.outputs.url }}
+    outputs:
+      url: ${{ steps.deploy.outputs.url }}
+
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      PRODUCAO: ${{ (inputs.ambiente || 'production') == 'production' }}
+
+    steps:
+      # Falhar aqui, com a instrução à frente, é melhor do que falhar três
+      # passos adiante numa mensagem do CLI sobre autenticação.
+      - name: Confirmar os segredos
+        run: |
+          em_falta=""
+          [ -z "${{ secrets.VERCEL_TOKEN }}" ]      && em_falta="$em_falta VERCEL_TOKEN"
+          [ -z "${{ secrets.VERCEL_ORG_ID }}" ]     && em_falta="$em_falta VERCEL_ORG_ID"
+          [ -z "${{ secrets.VERCEL_PROJECT_ID }}" ] && em_falta="$em_falta VERCEL_PROJECT_ID"
+          if [ -n "$em_falta" ]; then
+            echo "::error::Faltam segredos do Vercel:$em_falta. Corre 'npx vercel link' e define-os em Settings → Secrets and variables → Actions. Ver README, secção Publicação."
+            exit 1
+          fi
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      # Versão fixa: `vercel@latest` já partiu pipelines alheios sem aviso.
+      - name: Instalar o Vercel CLI
+        run: npm install -g vercel@59
+
+      - name: Obter a configuração do projecto
+        run: |
+          vercel pull --yes \
+            --environment="${{ inputs.ambiente || 'production' }}" \
+            --token="${{ secrets.VERCEL_TOKEN }}"
+
+      # Construir aqui, e não no Vercel, mantém o mesmo artefacto que passou
+      # pelos testes de qualidade e permite falhar antes de publicar.
+      - name: Construir
+        run: |
+          if [ "$PRODUCAO" = "true" ]; then
+            vercel build --prod --token="${{ secrets.VERCEL_TOKEN }}"
+          else
+            vercel build --token="${{ secrets.VERCEL_TOKEN }}"
+          fi
+
+      # O conjunto pré-calculado é o conteúdo do site. Se não viajar no
+      # artefacto, o mapa chega ao visitante sem cor nenhuma.
+      - name: Confirmar que os dados seguem no artefacto
+        run: |
+          ficheiro=".vercel/output/static/dados/relatorios.json"
+          if [ ! -f "$ficheiro" ]; then
+            echo "::error::$ficheiro não existe no artefacto de build."
+            exit 1
+          fi
+          total=$(node -e "console.log(Object.keys(require('./$ficheiro').reports).length)")
+          echo "Relatórios no artefacto: $total"
+          if [ "$total" -lt 1 ]; then
+            echo "::error::O conjunto de dados está vazio."
+            exit 1
+          fi
+
+      - name: Publicar
+        id: deploy
+        run: |
+          if [ "$PRODUCAO" = "true" ]; then
+            url=$(vercel deploy --prebuilt --prod --token="${{ secrets.VERCEL_TOKEN }}")
+          else
+            url=$(vercel deploy --prebuilt --token="${{ secrets.VERCEL_TOKEN }}")
+          fi
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "Publicado em $url"
+
+      - name: Resumo
+        run: |
+          {
+            echo "## Publicação no Vercel"
+            echo ""
+            echo "- **URL**: ${{ steps.deploy.outputs.url }}"
+            echo "- **Ambiente**: ${{ inputs.ambiente || 'production' }}"
+            echo "- **Commit**: \`${GITHUB_SHA:0:7}\`"
+          } >> "$GITHUB_STEP_SUMMARY"

@@ -24,6 +24,11 @@ dist/
 dist-ssr/
 build/
 
+# Vercel: .vercel/project.json guarda os IDs do projecto ligado, que no CI
+# chegam por VERCEL_ORG_ID e VERCEL_PROJECT_ID. .vercel/output é o artefacto
+# de `vercel build`.
+.vercel/
+
 # Documentação e artigos
 docs/
 
