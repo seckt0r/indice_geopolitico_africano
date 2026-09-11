@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   BookOpen,
   Database,
@@ -7,6 +7,7 @@ import {
   History,
   Info,
   Landmark,
+  LineChart,
   MousePointerClick,
   RefreshCw,
   Scale,
@@ -14,13 +15,15 @@ import {
   TrendingUp,
   Users,
 } from 'lucide-react';
-import { DimensionData, IGAReport, Language, ReportDataset, StabilityKey } from '../types';
+import { DimensionData, EvolutionPoint, IGAReport, Language, ReportDataset, StabilityKey } from '../types';
 import { STABILITY_KEYS } from '../types';
 import { LoadingSpinner } from './LoadingSpinner';
 import { t } from '../utils/translations';
 import { STABILITY_BADGE_CLASSES, STABILITY_COLORS, stabilityLabel } from '../utils/stability';
 import { PILLARS } from '../utils/pillars';
 import { COUNTRY_COUNT } from '../utils/countries';
+import { loadEvolution } from '../services/reportDataset';
+import { EvolutionChart } from './EvolutionChart';
 
 interface ReportPanelProps {
   countryName: string | null;
@@ -174,6 +177,23 @@ export const ReportPanel: React.FC<ReportPanelProps> = ({
   const seconds = elapsedSeconds % 60;
   const title = data?.countryName || countryName || t('countryDetails', language);
 
+  // Série histórica do país aberto. É um pedido leve e independente do
+  // relatório: se falhar, o painel continua completo, apenas sem o gráfico.
+  const [evolution, setEvolution] = useState<EvolutionPoint[]>([]);
+  const countryId = data?.id ?? null;
+
+  useEffect(() => {
+    if (!countryId) {
+      setEvolution([]);
+      return;
+    }
+    const controller = new AbortController();
+    loadEvolution(countryId, language, controller.signal).then((pontos) => {
+      if (!controller.signal.aborted) setEvolution(pontos);
+    });
+    return () => controller.abort();
+  }, [countryId, language]);
+
   return (
     <div className="flex h-full flex-col bg-geo-paper">
       <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-geo-line bg-geo-surface/95 px-5 py-4 backdrop-blur">
@@ -287,6 +307,14 @@ export const ReportPanel: React.FC<ReportPanelProps> = ({
                   );
                 })}
               </div>
+            </section>
+
+            <section className="border-t border-geo-line pt-5">
+              <h3 className="mb-3 flex items-center gap-2 font-serif text-base font-bold">
+                <LineChart size={16} className="text-geo-accent" />
+                {t('evolutionTitle', language)}
+              </h3>
+              <EvolutionChart points={evolution} language={language} />
             </section>
 
             {data.longAnalysis && (

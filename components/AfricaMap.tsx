@@ -19,8 +19,16 @@ interface AfricaMapProps {
   language: Language;
 }
 
-const GEOJSON_URL =
-  'https://raw.githubusercontent.com/codeforgermany/click_that_hood/main/public/data/africa.geojson';
+/**
+ * Cartografia servida pela própria aplicação.
+ *
+ * Era carregada do `raw.githubusercontent.com` em cada visita, o que punha a
+ * disponibilidade do mapa nas mãos de um terceiro e obrigava a abrir a política
+ * de segurança de conteúdo a um domínio externo. O ficheiro está agora em
+ * `public/dados/`, reduzido ao que o mapa usa e enriquecido com o `iso_a2` que
+ * a origem não trazia.
+ */
+const GEOJSON_URL = `${import.meta.env.BASE_URL}dados/africa.geojson`;
 
 // Cartografia em papel claro: o país por analisar é um cinzento neutro, não
 // um vazio escuro, e o país filtrado desvanece em vez de escurecer.
@@ -48,7 +56,13 @@ const NAME_OVERRIDES: Partial<Record<Language, Record<string, string>>> = {
   pt: { SZ: 'Essuatíni' },
 };
 
-/** ISO alpha-2 da feature; recai no nome inglês quando o dataset não o traz. */
+/**
+ * ISO alpha-2 da feature — a chave que liga a geometria ao índice.
+ *
+ * O fallback pelo nome existe por prudência, mas não deve disparar: a
+ * cartografia versionada declara `iso_a2` em todas as features. Se disparasse,
+ * o país aparecia sem cor porque a chave não casaria com a do conjunto.
+ */
 const featureId = (feature: CountryGeoFeature): string =>
   (feature.properties.iso_a2 || feature.properties.name || '').toUpperCase();
 

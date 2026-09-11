@@ -88,6 +88,11 @@ jobs:
       # Construir aqui, e não no Vercel, mantém o mesmo artefacto que passou
       # pelos testes de qualidade e permite falhar antes de publicar.
       - name: Construir
+        env:
+          # Lidas pelo vite.config.ts e embutidas no pacote. Ambas são públicas
+          # por desenho: quem protege o índice é a segurança ao nível da linha.
+          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY }}
         run: |
           if [ "$PRODUCAO" = "true" ]; then
             vercel build --prod --token="${{ secrets.VERCEL_TOKEN }}"
@@ -95,21 +100,29 @@ jobs:
             vercel build --token="${{ secrets.VERCEL_TOKEN }}"
           fi
 
-      # O conjunto pré-calculado é o conteúdo do site. Se não viajar no
-      # artefacto, o mapa chega ao visitante sem cor nenhuma.
-      - name: Confirmar que os dados seguem no artefacto
+      # A configuração pública do Supabase é resolvida na compilação pelo
+      # vite.config.ts. Sem ela o pacote sai sem saber onde está o índice, e o
+      # mapa chega ao visitante sem cor nenhuma.
+      - name: Confirmar que o pacote sabe ler o índice
         run: |
-          ficheiro=".vercel/output/static/dados/relatorios.json"
-          if [ ! -f "$ficheiro" ]; then
-            echo "::error::$ficheiro não existe no artefacto de build."
+          if ! grep -rqF "supabase.co" .vercel/output/static/assets/*.js; then
+            echo "::error::O pacote construído não contém o endereço da base. Verifica as variáveis SUPABASE_URL e SUPABASE_ANON_KEY."
             exit 1
           fi
-          total=$(node -e "console.log(Object.keys(require('./$ficheiro').reports).length)")
-          echo "Relatórios no artefacto: $total"
-          if [ "$total" -lt 1 ]; then
-            echo "::error::O conjunto de dados está vazio."
+          echo "Configuração da base presente no pacote."
+
+      # Rede de segurança contra a pior falha possível: publicar uma chave
+      # privilegiada. A chave de serviço não tem prefixo VITE_ e não deveria
+      # sequer estar neste ambiente, mas confirmar custa um segundo.
+      - name: Confirmar que nenhuma chave privilegiada foi publicada
+        env:
+          CHAVE_SERVICO: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          if [ -n "$CHAVE_SERVICO" ] && grep -rqF "$CHAVE_SERVICO" .vercel/output/static/ 2>/dev/null; then
+            echo "::error::A chave de serviço do Supabase está no artefacto. Publicação abortada."
             exit 1
           fi
+          echo "Sem chaves privilegiadas no artefacto."
 
       - name: Publicar
         id: deploy

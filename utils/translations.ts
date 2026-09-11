@@ -144,7 +144,12 @@ export type TranslationKey =
   | 'dataFallbackNotice'
   | 'dataMissingNotice'
   | 'loadingData'
-  | 'mapPanelTitle';
+  | 'mapPanelTitle'
+  | 'evolutionTitle'
+  | 'evolutionEmpty'
+  | 'evolutionBuilding'
+  | 'reading'
+  | 'dbUnavailable';
 
 /**
  * O dicionário `pt` é a referência completa: tem obrigatoriamente todas as
@@ -310,6 +315,13 @@ const resources: { pt: Dictionary } & Record<Language, Partial<Dictionary>> = {
       'Conjunto de dados pré-calculado indisponível. Os relatórios serão gerados a pedido, o que demora.',
     loadingData: 'A carregar o índice…',
     mapPanelTitle: 'Mapa do índice',
+    evolutionTitle: 'Evolução da classificação',
+    evolutionEmpty: 'Ainda sem histórico para este país.',
+    evolutionBuilding:
+      'Uma só geração registada. A série começa a desenhar-se a partir da próxima actualização.',
+    reading: 'Leitura',
+    dbUnavailable:
+      'Não foi possível ler o índice da base de dados. Os relatórios serão gerados a pedido, o que demora.',
   },
   en: {
     appTitle: 'Africa Geopolitics Catalog',
@@ -465,6 +477,12 @@ const resources: { pt: Dictionary } & Record<Language, Partial<Dictionary>> = {
       'Pre-computed dataset unavailable. Reports will be generated on demand, which takes time.',
     loadingData: 'Loading the index…',
     mapPanelTitle: 'Index map',
+    evolutionTitle: 'Classification over time',
+    evolutionEmpty: 'No history for this country yet.',
+    evolutionBuilding: 'Only one generation recorded. The series starts to take shape from the next update.',
+    reading: 'Reading',
+    dbUnavailable:
+      'Could not read the index from the database. Reports will be generated on demand, which takes time.',
   },
   fr: {
     appTitle: "Catalogue Géopolitique de l'Afrique",
@@ -621,6 +639,13 @@ const resources: { pt: Dictionary } & Record<Language, Partial<Dictionary>> = {
       'Jeu de données précalculé indisponible. Les rapports seront générés à la demande, ce qui prend du temps.',
     loadingData: 'Chargement de l’indice…',
     mapPanelTitle: 'Carte de l’indice',
+    evolutionTitle: 'Évolution du classement',
+    evolutionEmpty: 'Pas encore d’historique pour ce pays.',
+    evolutionBuilding:
+      'Une seule génération enregistrée. La série se dessine à partir de la prochaine mise à jour.',
+    reading: 'Relevé',
+    dbUnavailable:
+      'Impossible de lire l’indice depuis la base de données. Les rapports seront générés à la demande, ce qui prend du temps.',
   },
   zh: {
     appTitle: '非洲地缘政治目录',
@@ -772,6 +797,11 @@ const resources: { pt: Dictionary } & Record<Language, Partial<Dictionary>> = {
     dataMissingNotice: '预计算数据集不可用。报告将按需生成，需要一些时间。',
     loadingData: '正在加载指数…',
     mapPanelTitle: '指数地图',
+    evolutionTitle: '分级演变',
+    evolutionEmpty: '该国尚无历史数据。',
+    evolutionBuilding: '仅记录了一次生成。曲线将从下次更新开始成形。',
+    reading: '读数',
+    dbUnavailable: '无法从数据库读取指数。报告将按需生成，需要一些时间。',
   },
   ru: {
     appTitle: 'Каталог геополитики Африки',
@@ -927,6 +957,12 @@ const resources: { pt: Dictionary } & Record<Language, Partial<Dictionary>> = {
       'Предварительно рассчитанный набор данных недоступен. Отчёты будут формироваться по запросу, что занимает время.',
     loadingData: 'Загрузка индекса…',
     mapPanelTitle: 'Карта индекса',
+    evolutionTitle: 'Динамика классификации',
+    evolutionEmpty: 'По этой стране ещё нет истории.',
+    evolutionBuilding: 'Записана лишь одна генерация. Ряд начнёт складываться со следующего обновления.',
+    reading: 'Значение',
+    dbUnavailable:
+      'Не удалось прочитать индекс из базы данных. Отчёты будут формироваться по запросу, что занимает время.',
   },
   es: {
     appTitle: 'Catálogo de Geopolítica de África',
@@ -1083,6 +1119,13 @@ const resources: { pt: Dictionary } & Record<Language, Partial<Dictionary>> = {
       'Conjunto de datos precalculado no disponible. Los informes se generarán bajo demanda, lo que lleva tiempo.',
     loadingData: 'Cargando el índice…',
     mapPanelTitle: 'Mapa del índice',
+    evolutionTitle: 'Evolución de la clasificación',
+    evolutionEmpty: 'Todavía no hay histórico para este país.',
+    evolutionBuilding:
+      'Solo una generación registrada. La serie empieza a dibujarse desde la próxima actualización.',
+    reading: 'Lectura',
+    dbUnavailable:
+      'No se pudo leer el índice desde la base de datos. Los informes se generarán bajo demanda, lo que lleva tiempo.',
   },
   de: {
     appTitle: 'Katalog der Geopolitik Afrikas',
@@ -1239,6 +1282,12 @@ const resources: { pt: Dictionary } & Record<Language, Partial<Dictionary>> = {
       'Vorberechneter Datensatz nicht verfügbar. Berichte werden auf Anfrage erzeugt, was Zeit braucht.',
     loadingData: 'Index wird geladen…',
     mapPanelTitle: 'Indexkarte',
+    evolutionTitle: 'Entwicklung der Einstufung',
+    evolutionEmpty: 'Für dieses Land gibt es noch keine Historie.',
+    evolutionBuilding: 'Nur eine Generierung erfasst. Die Reihe entsteht ab der nächsten Aktualisierung.',
+    reading: 'Messwert',
+    dbUnavailable:
+      'Der Index konnte nicht aus der Datenbank gelesen werden. Berichte werden auf Anfrage erzeugt, was Zeit braucht.',
   },
   it: {
     appTitle: "Catalogo della Geopolitica dell'Africa",
@@ -1395,6 +1444,12 @@ const resources: { pt: Dictionary } & Record<Language, Partial<Dictionary>> = {
       'Insieme di dati precalcolato non disponibile. I rapporti saranno generati su richiesta, il che richiede tempo.',
     loadingData: 'Caricamento dell’indice…',
     mapPanelTitle: 'Mappa dell’indice',
+    evolutionTitle: 'Evoluzione della classificazione',
+    evolutionEmpty: 'Nessuno storico per questo paese, per ora.',
+    evolutionBuilding: 'Una sola generazione registrata. La serie prende forma dal prossimo aggiornamento.',
+    reading: 'Lettura',
+    dbUnavailable:
+      'Non è stato possibile leggere l’indice dal database. I rapporti saranno generati su richiesta, il che richiede tempo.',
   },
 };
 

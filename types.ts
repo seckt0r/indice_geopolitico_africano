@@ -81,17 +81,30 @@ export interface MapTooltipData {
 }
 
 /**
- * Conjunto de relatórios pré-calculado na compilação e servido como ficheiro
- * estático. É isto que permite que o mapa apareça já colorido e que o painel
- * mostre um país sem esperar minutos pelo modelo.
+ * Conjunto de relatórios lido da base de dados ao arrancar. É isto que permite
+ * que o mapa apareça já colorido e que o painel mostre um país sem esperar
+ * minutos pelo modelo.
  */
 export interface ReportDataset {
-  /** Epoch ms do fim da última execução do script de geração. */
+  /** Epoch ms da geração mais recente do conjunto. */
   generatedAt: number;
-  /** Modelo que produziu este conjunto, para efeitos de proveniência. */
-  model: string;
   /** Idioma em que o conteúdo textual foi gerado. */
   language: Language;
   /** Relatórios indexados por ISO 3166-1 alpha-2. */
   reports: Record<string, IGAReport>;
+}
+
+/**
+ * Um ponto da série histórica de um país.
+ *
+ * A base guarda uma linha por geração em vez de substituir a anterior, o que
+ * torna possível desenhar a evolução da classificação ao longo do tempo.
+ */
+export interface EvolutionPoint {
+  /** Epoch ms do momento da geração. */
+  generatedAt: number;
+  igaScore: number;
+  stabilityKey: StabilityKey;
+  /** Pontuação de cada pilar nesse momento. */
+  dimensions: Record<DimensionKey, number>;
 }

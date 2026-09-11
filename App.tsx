@@ -95,8 +95,8 @@ const App: React.FC = () => {
   /** Cancela o pedido anterior quando o utilizador clica noutro país. */
   const abortRef = useRef<AbortController | null>(null);
 
-  // Carrega o índice pré-calculado. É isto que faz o mapa aparecer já colorido
-  // e o painel ter conteúdo antes de qualquer clique.
+  // Carrega o índice da base de dados. É isto que faz o mapa aparecer já
+  // colorido e o painel ter conteúdo antes de qualquer clique.
   useEffect(() => {
     const controller = new AbortController();
     setDatasetState('loading');
@@ -118,8 +118,8 @@ const App: React.FC = () => {
   }, [language]);
 
   // O estado do Ollama só interessa quando é preciso gerar a pedido. Com o
-  // conjunto pré-calculado disponível, avisar o visitante de que não tem um
-  // modelo local a correr seria ruído sobre um problema que ele não tem.
+  // índice disponível na base, avisar o visitante de que não tem um modelo
+  // local a correr seria ruído sobre um problema que ele não tem.
   useEffect(() => {
     if (datasetState !== 'missing') {
       setHealthWarning(null);
@@ -227,8 +227,8 @@ const App: React.FC = () => {
     if (datasetState === 'fallback') return t('dataFallbackNotice', language);
     if (datasetState === 'missing') {
       return healthWarning
-        ? `${t('dataMissingNotice', language)} ${healthWarning}`
-        : t('dataMissingNotice', language);
+        ? `${t('dbUnavailable', language)} ${healthWarning}`
+        : t('dbUnavailable', language);
     }
     return null;
   })();

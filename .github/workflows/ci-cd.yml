@@ -49,11 +49,18 @@ jobs:
         run: npm run format:check
 
       - name: Build
+        env:
+          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY }}
         run: npm run build
 
-      # O site vive do conjunto pré-calculado: um ficheiro truncado publicado
-      # dá um mapa sem cor e um painel vazio. Falha aqui, não em produção.
-      - name: Validar o conjunto de dados
+      # O site vive do índice guardado na base: um conjunto incompleto ou com
+      # pontuações inválidas dá um mapa sem cor e um painel vazio. Falha aqui,
+      # não em produção.
+      - name: Validar o índice na base de dados
+        env:
+          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY }}
         run: npm run dados:verificar
 
   previsualizacao:
