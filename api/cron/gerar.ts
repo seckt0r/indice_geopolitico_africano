@@ -21,11 +21,16 @@
 import { AFRICAN_COUNTRIES } from '../../utils/countries';
 import type { Language } from '../../types';
 
-export const config = {
-  // Ajustável conforme o plano. No plano gratuito, valores acima do limite
-  // fazem a publicação falhar.
-  maxDuration: Number(process.env.IGA_CRON_MAX_DURATION) || 60,
-};
+/**
+ * Duração máxima da função, em segundos.
+ *
+ * O limite da plataforma é declarado em `vercel.json`, na chave `functions`, e
+ * não aqui: o Vercel analisa estaticamente um `export const config` e rejeita
+ * qualquer expressão — um `Number(...) || 60` faz a publicação falhar com
+ * "Unhandled type: LogicalExpression". Este valor é só o orçamento que o ciclo
+ * respeita, e tem de acompanhar o que está no vercel.json.
+ */
+const DURACAO_MAXIMA_S = Number(process.env.IGA_CRON_MAX_DURATION) || 60;
 
 /** Margem para fechar a resposta antes de a função ser terminada à força. */
 const MARGEM_MS = 8_000;
@@ -68,7 +73,7 @@ export default async function handler(request: Request): Promise<Response> {
   const url = new URL(request.url);
   const idioma = (url.searchParams.get('lang') ?? 'pt') as Language;
   const validadeMs = (Number(url.searchParams.get('max-age')) || 24) * 60 * 60 * 1000;
-  const orcamentoMs = config.maxDuration * 1000 - MARGEM_MS;
+  const orcamentoMs = DURACAO_MAXIMA_S * 1000 - MARGEM_MS;
 
   // Relatório mais recente de cada país, para saber o que já não precisa.
   const actuais = await rpc<Array<{ id?: string; generatedAt?: number }>>('iga_relatorios_actuais', {

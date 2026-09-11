@@ -77,5 +77,10 @@
       "path": "/api/cron/gerar",
       "schedule": "0 3 * * *"
     }
-  ]
+  ],
+  "functions": {
+    "api/cron/gerar.ts": {
+      "maxDuration": 60
+    }
+  }
 }
