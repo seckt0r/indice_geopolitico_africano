@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- Background Disc with Subtle Paper Border -->
+  <rect width="32" height="32" rx="7" fill="#123A5E"/>
+  
+  <!-- Stylized Africa Silhouette -->
+  <path d="M 12.5 5.5 C 15 4.5 18 4.2 21 5.2 C 23.5 6 25 7.5 25.5 8.8 C 26 10.2 24.5 12 24.2 13.5 C 24.8 14.8 28.5 16 28.8 17.5 C 29 18.8 27.5 20 26 21.2 C 24.5 22.8 23 25 21 26.8 C 20 27.8 18.5 29 17.2 29 C 16.2 29 15.2 27.8 14.8 26.5 C 14.2 24.5 13.8 22.2 13 20.8 C 12.2 19.5 10.8 18.5 9.5 18.2 C 7.5 18.2 5.5 17.5 4.5 16 C 3.5 14.8 4 13 4.8 11.5 C 5.5 10 7.5 8.5 9 7.5 C 10.2 6.5 11.5 5.8 12.5 5.5 Z" 
+        fill="#FAF9F6" fill-opacity="0.15" stroke="#FAF9F6" stroke-width="1.2" stroke-linejoin="round" stroke-linecap="round"/>
+  
+  <!-- Madagascar -->
+  <path d="M 27 21 C 28 20 28.5 20.8 28.2 22.2 C 27.8 24 26.5 26 25.8 26.8 C 25.4 27.2 25 27 25.2 26 C 25.6 24.5 26.6 22.5 27 21 Z"
+        fill="#FAF9F6" stroke="#FAF9F6" stroke-width="0.8"/>
+  
+  <!-- Equatorial Geopolitical Ring -->
+  <path d="M 2 17.5 C 10 14.5 22 14.5 30 17.5" fill="none" stroke="#A76B16" stroke-width="1.2" stroke-linecap="round"/>
+  
+  <!-- Central Sovereign Golden Node -->
+  <circle cx="16" cy="17" r="2.2" fill="#A76B16" stroke="#FAF9F6" stroke-width="0.8"/>
+  <circle cx="21" cy="8" r="1.2" fill="#FAF9F6"/>
+  <circle cx="9" cy="14" r="1.2" fill="#FAF9F6"/>
+  <circle cx="25" cy="18" r="1.2" fill="#FAF9F6"/>
+  <circle cx="17.5" cy="25" r="1.2" fill="#FAF9F6"/>
+</svg>

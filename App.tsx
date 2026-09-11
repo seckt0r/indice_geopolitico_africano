@@ -17,6 +17,7 @@ import { MethodologyPage } from './components/MethodologyPage';
 import { AlgorithmPage } from './components/AlgorithmPage';
 import { SourcesPage } from './components/SourcesPage';
 import { ComparisonPage } from './components/ComparisonPage';
+import { Logo } from './components/Logo';
 import { fetchCountryAnalysis, getCachedReport } from './services/igaService';
 import { loadReportDataset } from './services/reportDataset';
 import { AiError, checkOllamaHealth } from './services/ollamaClient';
@@ -246,9 +247,8 @@ const App: React.FC = () => {
       <div className="mx-auto max-w-6xl px-6 py-10 md:px-10">
         <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
           <div className="max-w-md">
-            <div className="mb-2 flex items-center gap-2">
-              <Globe size={16} className="text-geo-primary" />
-              <span className="font-serif text-sm font-bold text-geo-ink">{t('appTitle', language)}</span>
+            <div className="mb-2">
+              <Logo variant="full" size="sm" showDescriptor={false} />
             </div>
             <p className="text-xs leading-relaxed text-geo-muted">{t('footerNote', language)}</p>
           </div>
@@ -283,20 +283,18 @@ const App: React.FC = () => {
     <div className="flex h-screen flex-col overflow-hidden bg-geo-paper font-sans text-geo-body selection:bg-geo-primarySoft selection:text-geo-ink">
       <header className="relative z-40 flex h-16 shrink-0 items-center border-b border-geo-line bg-geo-surface/95 px-4 backdrop-blur md:px-8">
         <button
-          className="group flex items-center gap-2.5 text-left"
+          className="group flex items-center text-left"
           onClick={() => navigate(Page.HOME)}
           aria-label={t('appTitle', language)}
         >
-          <Globe
-            className="text-geo-primary transition-transform duration-700 group-hover:rotate-180"
-            size={24}
+          <Logo
+            variant="full"
+            size="sm"
+            showDescriptor={false}
+            interactive
+            className="hidden sm:inline-flex"
           />
-          <span className="hidden font-serif text-lg font-bold tracking-tight text-geo-ink md:block">
-            {t('appTitle', language)}
-          </span>
-          <span className="font-serif text-lg font-bold tracking-tight text-geo-ink md:hidden">
-            {t('appTitleShort', language)}
-          </span>
+          <Logo variant="compact" size="sm" interactive className="sm:hidden" />
         </button>
 
         <nav className="ml-auto flex items-center gap-4 md:gap-7">

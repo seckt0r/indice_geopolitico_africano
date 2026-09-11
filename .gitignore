@@ -30,7 +30,8 @@ build/
 .vercel/
 
 # Documentação e artigos
-docs/
+docs/*
+!docs/GUIA_DE_IDENTIDADE_VISUAL.md
 
 # TypeScript cache
 *.tsbuildinfo
