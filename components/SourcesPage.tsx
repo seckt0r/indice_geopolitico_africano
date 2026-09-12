@@ -151,7 +151,7 @@ export const SourcesPage: React.FC<SourcesPageProps> = ({ language }) => {
           index="02"
           id="referencias"
           title={t('referencesTitle', language)}
-          description="A reformulação do índice assenta em literatura explícita. Cada referência responde por uma decisão metodológica concreta."
+          description="As opções metodológicas do índice assentam em literatura explícita. Cada referência responde por uma decisão concreta."
         />
         <div className="grid gap-5 md:grid-cols-2">
           {REFERENCES.map((reference) => (

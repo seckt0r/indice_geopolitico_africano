@@ -14,6 +14,7 @@ import { t } from '../utils/translations';
 import { PILLAR_DETAILS } from '../utils/methodology';
 import { PILLARS } from '../utils/pillars';
 import { Callout, PageShell, SectionHeading, Stat, Tag } from './Layout';
+import { InstitutionLogo, type Institution } from './InstitutionLogo';
 
 interface AboutPageProps {
   language: Language;
@@ -36,18 +37,38 @@ const ABOUT_PT = {
     'Em vez disso, assenta numa estrutura multidimensional construída sobre dados abertos e sobre instituições pan-africanas. A pontuação de cada Estado resulta de quatro pilares activos com peso igual, complementados por um quinto pilar que enquadra a leitura sem entrar na aritmética.',
   ],
   why: [
-    'A edição anterior do índice somava cinco pilares com peso de 20 % cada e publicava uma ordenação de 1 a 54. Uma auditoria técnica desfez as duas opções. A simulação de Monte Carlo mostrou que os intervalos de confiança a 90 % têm amplitude média de quase treze posições: a totalidade dos 53 pares consecutivos do ranking é estatisticamente indistinguível, o que torna a ordenação linear informação sem conteúdo.',
-    'A segunda correcção é de natureza teórica. O pilar de trajetória histórica é composto por variáveis nominais — tradição jurídica herdada, padrão de inserção colonial — e calcular a média de variáveis nominais viola a teoria de escalas de medida. O pilar passou a moderador contextual e os quatro restantes repartiram entre si a totalidade do peso.',
+    'Duas decisões moldam tudo o resto, e ambas são restrições antes de serem escolhas. A primeira é a recusa de publicar uma ordenação de 1 a 54. A simulação de Monte Carlo mostra que os intervalos de confiança a 90 % têm amplitude média de quase treze posições: a totalidade dos 53 pares consecutivos seria estatisticamente indistinguível, o que faria da ordenação linear informação sem conteúdo. Os seis escalões são a granularidade máxima que os dados sustentam.',
+    'A segunda é de natureza teórica. O pilar de trajetória histórica é composto por variáveis nominais — tradição jurídica herdada, padrão de inserção colonial — e calcular a média de variáveis nominais viola a teoria de escalas de medida. Por isso não entra na soma: funciona como quadro moderador da leitura, e a totalidade do peso reparte-se pelos quatro pilares activos.',
   ],
   how: [
-    'Os relatórios não são lidos de uma base de dados pré-calculada. Quando um país é seleccionado no mapa, um modelo de linguagem em execução local recebe um prompt metodológico com a definição dos pilares, os indicadores admissíveis e as regras de safra, e devolve uma pontuação justificada para cada pilar, em formato estruturado.',
-    'A aritmética nunca é delegada ao modelo. A agregação dos quatro pilares activos e a atribuição do escalão são calculadas no cliente, porque modelos de linguagem erram contas e essa é exactamente a parte do processo que tem de ser determinística e auditável.',
+    'Os relatórios são produzidos antes de chegarem a quem consulta o índice. Periodicamente, cada um dos 54 Estados é submetido a um modelo de linguagem com um prompt metodológico que transporta a definição dos pilares, os indicadores admissíveis e as regras de safra. O modelo devolve uma pontuação justificada para cada pilar, em formato estruturado, e o resultado fica guardado numa base de dados de onde o mapa o lê de imediato.',
+    'Cada geração acrescenta um registo em vez de substituir o anterior. É esse histórico que permite acompanhar a evolução da classificação de um país ao longo do tempo, em vez de mostrar apenas o estado presente.',
+    'A aritmética nunca é delegada ao modelo. A agregação dos quatro pilares activos e a atribuição do escalão são recalculadas no cliente, a partir das pontuações por pilar, porque modelos de linguagem erram contas e essa é exactamente a parte do processo que tem de ser determinística e auditável.',
   ],
   scope: [
     'As pontuações são estimativas geradas por um modelo de linguagem a partir do seu conhecimento sobre indicadores reais, e não medições extraídas directamente das bases de dados citadas. O catálogo de fontes documenta a proveniência pretendida de cada indicador e serve de referência para verificação independente.',
     'O índice destina-se a diagnóstico de estrangulamentos, preparação diplomática e alerta precoce. É expressamente vedado usar a pontuação composta como variável independente univariada em regressões de causalidade linear.',
   ],
 };
+
+/**
+ * Instituições parceiras mostradas no quadro de colaboração académica.
+ *
+ * Os ficheiros vivem em `public/instituicoes/`. Enquanto não existirem, cada
+ * caixa mostra um monograma com a sigla — ver `InstitutionLogo`.
+ */
+const INSTITUICOES_PARCEIRAS: Institution[] = [
+  {
+    sigla: 'ACITE',
+    nome: 'Academia de Ciências Sociais e Tecnologias',
+    ficheiro: '/instituicoes/acite.svg',
+  },
+  {
+    sigla: 'ISA',
+    nome: 'Instituto Superior de Angola',
+    ficheiro: '/instituicoes/isa.svg',
+  },
+];
 
 export const AboutPage: React.FC<AboutPageProps> = ({
   language,
@@ -207,6 +228,11 @@ export const AboutPage: React.FC<AboutPageProps> = ({
                   <GraduationCap size={13} /> {t('collab', language)}
                 </div>
                 <p className="leading-relaxed text-geo-body">{t('collabText', language)}</p>
+                <div className="mt-4 grid grid-cols-2 gap-3">
+                  {INSTITUICOES_PARCEIRAS.map((instituicao) => (
+                    <InstitutionLogo key={instituicao.sigla} instituicao={instituicao} />
+                  ))}
+                </div>
               </div>
             </div>
           </div>

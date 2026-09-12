@@ -1,6 +1,6 @@
 /**
  * Ponto único de verdade para traduzir uma StabilityKey em cor e em texto.
- * Reflete os 6 escalões estatísticos robustos do IGA Reformulado (E1 a E6).
+ * Reflete os 6 escalões estatísticos robustos do IGA (E1 a E6).
  */
 
 import { Language, StabilityKey } from '../types';

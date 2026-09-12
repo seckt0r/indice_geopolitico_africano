@@ -1,5 +1,5 @@
 /**
- * Catálogo das fontes de dados que sustentam o IGA Reformulado.
+ * Catálogo das fontes de dados que sustentam o IGA.
  *
  * Esta lista é documentação da metodologia, não um conjunto de ligações
  * decorativas: cada entrada declara que pilar alimenta e que indicador extrai,
@@ -93,7 +93,7 @@ export const DATA_SOURCES: DataSource[] = [
     indicator:
       'Confiança declarada nos órgãos de soberania, percepção de corrupção e sensação de segurança pessoal.',
     rationale:
-      'Ruptura epistémica central do IGA: a legitimidade institucional é aferida junto dos cidadãos africanos, não por analistas de risco corporativo do Norte Global.',
+      'Opção central do IGA: a legitimidade institucional é aferida junto dos cidadãos africanos, e não por analistas de risco corporativo do Norte Global.',
     url: 'https://www.afrobarometer.org/data/',
     cadence: 'Rondas bienais por país',
   },
@@ -119,7 +119,7 @@ export const DATA_SOURCES: DataSource[] = [
     indicator:
       'Índice Herfindahl-Hirschman de concentração da pauta exportadora; o IGA usa o seu inverso como medida de diversificação produtiva.',
     rationale:
-      'Substitui a percentagem de manufacturas nas exportações, que premiava artificialmente economias de entreposto e reexportação aduaneira.',
+      'Preferido à percentagem de manufacturas nas exportações, que premiaria artificialmente economias de entreposto e reexportação aduaneira.',
     url: 'https://unctadstat.unctad.org/',
     cadence: 'Anual',
   },
@@ -225,7 +225,7 @@ export const DATA_SOURCES: DataSource[] = [
   },
 ];
 
-/** Referências teóricas invocadas pela reformulação metodológica. */
+/** Referências teóricas que sustentam as opções metodológicas do índice. */
 export interface Reference {
   author: string;
   work: string;

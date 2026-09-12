@@ -166,9 +166,10 @@ export const MethodologyPage: React.FC<MethodologyPageProps> = ({ language }) =>
               <p className="mt-3 font-mono text-xs text-geo-muted">w₁ = w₂ = w₃ = w₄ = 0,25</p>
             </div>
             <Callout title={t('labelReformulation', language)}>
-              O Pilar V deixou de pesar 20 % numa média de cinco pilares e passou a quadro moderador
-              contextual, por imposição da teoria de escalas de medida de Stevens. Os quatro pilares dinâmicos
-              repartiram entre si a totalidade do peso.
+              O Pilar V não entra na média. As suas variáveis são nominais — tradição jurídica herdada, padrão
+              de inserção colonial — e a média de variáveis nominais não tem significado matemático, pela
+              teoria de escalas de medida de Stevens. Funciona como quadro moderador da leitura, e a
+              totalidade do peso reparte-se pelos quatro pilares dinâmicos.
             </Callout>
           </div>
 
@@ -246,7 +247,7 @@ export const MethodologyPage: React.FC<MethodologyPageProps> = ({ language }) =>
                     <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-geo-accent">
                       {t('labelReformulation', language)}
                     </p>
-                    <p className="text-sm leading-relaxed text-geo-body">{detail.reformulation}</p>
+                    <p className="text-sm leading-relaxed text-geo-body">{detail.nota}</p>
                   </div>
                 </div>
               </article>
@@ -261,7 +262,7 @@ export const MethodologyPage: React.FC<MethodologyPageProps> = ({ language }) =>
           index="03"
           id="escaloes"
           title={t('tiersTitle', language)}
-          description="A ordenação de 1 a 54 foi banida por ser estatisticamente insustentável. Os Estados são classificados em seis escalões separáveis, cada um com um gargalo dominante próprio."
+          description="Uma ordenação de 1 a 54 seria estatisticamente insustentável, e por isso o índice não a publica. Os Estados são classificados em seis escalões separáveis, cada um com um gargalo dominante próprio."
         />
         <div className="overflow-x-auto">
           <table className="w-full min-w-[46rem] border-collapse text-left text-sm">

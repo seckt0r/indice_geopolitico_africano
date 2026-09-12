@@ -2,7 +2,7 @@ import React from 'react';
 import { AlertTriangle, Cpu, MonitorCheck } from 'lucide-react';
 import { Language } from '../types';
 import { t } from '../utils/translations';
-import { ALGORITHM_STEPS, TIERS, UNCERTAINTY_FINDINGS } from '../utils/methodology';
+import { ALGORITHM_STEPS, FASES, TIERS, UNCERTAINTY_FINDINGS } from '../utils/methodology';
 import { STABILITY_BADGE_CLASSES } from '../utils/stability';
 import { Callout, PageHeader, PageShell, SectionHeading, Tag } from './Layout';
 
@@ -30,42 +30,57 @@ export const AlgorithmPage: React.FC<AlgorithmPageProps> = ({ language }) => (
       <SectionHeading index="01" id="pipeline" title={t('howTitle', language)} />
 
       <ol className="relative space-y-0 border-l border-geo-line">
-        {ALGORITHM_STEPS.map((step) => {
+        {ALGORITHM_STEPS.map((step, indice) => {
           const isModel = step.actor === 'modelo';
+          // Cabeçalho de fase quando a etapa inaugura uma: separar a produção
+          // dos dados da consulta é o que explica porque é que abrir o mapa é
+          // instantâneo apesar de a inferência demorar.
+          const abreFase = indice === 0 || ALGORITHM_STEPS[indice - 1].fase !== step.fase;
+          const fase = FASES[step.fase];
           return (
-            <li key={step.n} className="relative pb-10 pl-8 last:pb-0 md:pl-10">
-              <span
-                className={`absolute -left-[9px] top-1 flex h-[18px] w-[18px] items-center justify-center rounded-full border-2 bg-geo-paper font-mono text-[10px] font-bold ${
-                  isModel ? 'border-geo-accent text-geo-accent' : 'border-geo-primary text-geo-primary'
-                }`}
-              >
-                {step.n}
-              </span>
-
-              <div className="mb-2 flex flex-wrap items-center gap-3">
-                <h3 className="font-serif text-lg font-bold">{step.title}</h3>
-                <Tag
-                  className={
-                    isModel
-                      ? 'border-amber-200 bg-geo-accentSoft text-amber-800'
-                      : 'border-geo-line bg-geo-primarySoft text-geo-primary'
-                  }
-                >
-                  <span className="inline-flex items-center gap-1.5">
-                    {isModel ? <Cpu size={11} /> : <MonitorCheck size={11} />}
-                    {isModel ? t('actorModel', language) : t('actorClient', language)}
-                  </span>
-                </Tag>
-              </div>
-
-              <p className="max-w-prose leading-relaxed text-geo-body">{step.body}</p>
-
-              {step.technical && (
-                <code className="mt-3 inline-block rounded-md border border-geo-line bg-geo-subtle px-3 py-1.5 font-mono text-xs text-geo-primary">
-                  {step.technical}
-                </code>
+            <React.Fragment key={step.n}>
+              {abreFase && (
+                <li className="relative -ml-px mb-6 list-none border-l-2 border-geo-accent pl-8 md:pl-10">
+                  <h3 className="font-serif text-sm font-bold uppercase tracking-wider text-geo-accent">
+                    {fase.titulo}
+                  </h3>
+                  <p className="mt-1 max-w-prose text-sm text-geo-muted">{fase.nota}</p>
+                </li>
               )}
-            </li>
+              <li className="relative pb-10 pl-8 last:pb-0 md:pl-10">
+                <span
+                  className={`absolute -left-[9px] top-1 flex h-[18px] w-[18px] items-center justify-center rounded-full border-2 bg-geo-paper font-mono text-[10px] font-bold ${
+                    isModel ? 'border-geo-accent text-geo-accent' : 'border-geo-primary text-geo-primary'
+                  }`}
+                >
+                  {step.n}
+                </span>
+
+                <div className="mb-2 flex flex-wrap items-center gap-3">
+                  <h3 className="font-serif text-lg font-bold">{step.title}</h3>
+                  <Tag
+                    className={
+                      isModel
+                        ? 'border-amber-200 bg-geo-accentSoft text-amber-800'
+                        : 'border-geo-line bg-geo-primarySoft text-geo-primary'
+                    }
+                  >
+                    <span className="inline-flex items-center gap-1.5">
+                      {isModel ? <Cpu size={11} /> : <MonitorCheck size={11} />}
+                      {isModel ? t('actorModel', language) : t('actorClient', language)}
+                    </span>
+                  </Tag>
+                </div>
+
+                <p className="max-w-prose leading-relaxed text-geo-body">{step.body}</p>
+
+                {step.technical && (
+                  <code className="mt-3 inline-block rounded-md border border-geo-line bg-geo-subtle px-3 py-1.5 font-mono text-xs text-geo-primary">
+                    {step.technical}
+                  </code>
+                )}
+              </li>
+            </React.Fragment>
           );
         })}
       </ol>
@@ -187,8 +202,8 @@ export const AlgorithmPage: React.FC<AlgorithmPageProps> = ({ language }) => (
             body: 'A lista de fontes que acompanha cada relatório é declarada pelo modelo e não é validada automaticamente contra o catálogo de fontes do projecto.',
           },
           {
-            title: 'Sem série temporal',
-            body: 'Cada relatório é um instantâneo gerado no momento do pedido. O índice ainda não guarda histórico, pelo que não suporta análise de tendência.',
+            title: 'Série temporal ainda curta',
+            body: 'O histórico começa na primeira geração e cresce um ponto por ciclo. A série sustenta a leitura da evolução, mas só ganha valor analítico ao fim de vários ciclos: variações entre duas gerações consecutivas reflectem tanto a realidade como a variabilidade do próprio modelo.',
           },
           {
             title: 'Cobertura desigual dos dados de base',

@@ -98,12 +98,12 @@ const LANGUAGE_NAMES: Record<Language, string> = {
 };
 
 const buildPrompt = (countryName: string, lang: Language): string => `
-Atue como o algoritmo de inferência do "Índice Geopolítico Africano (IGA Reformulado)". Gere um relatório analítico rigoroso para o país: ${countryName}.
+Atue como o algoritmo de inferência do "Índice Geopolítico Africano (IGA)". Gere um relatório analítico rigoroso para o país: ${countryName}.
 
 INFORMAÇÕES GERAIS:
 - Forneça a Capital e a População estimada actual.
 
-METODOLOGIA REFORMULADA DE PONTUAÇÃO (cada pilar de 0 a 100):
+METODOLOGIA DE PONTUAÇÃO (cada pilar de 0 a 100):
 Pontue cada pilar com base em evidências contemporâneas (safra ≤ 5 anos), priorizando dados abertos do Sul Global e instituições pan-africanas (BAD, UNECA, Afreximbank, Afrobarómetro, IIAG Mo Ibrahim, UNCTADstat, UCDP):
 
 1. Capacidade Económica e Resiliência Estrutural (economic):

@@ -24,8 +24,8 @@ export interface PillarDetail {
   summary: string;
   /** Indicadores concretos, cada um com a fonte que o alimenta. */
   indicators: Array<{ name: string; source: string }>;
-  /** O que foi mudado face à versão anterior do índice, e porquê. */
-  reformulation: string;
+  /** Opção metodológica que sustenta a escolha destes indicadores. */
+  nota: string;
 }
 
 export const PILLAR_DETAILS: PillarDetail[] = [
@@ -48,8 +48,7 @@ export const PILLAR_DETAILS: PillarDetail[] = [
       { name: 'Diversificação produtiva pelo inverso do índice Herfindahl-Hirschman', source: 'UNCTADstat' },
       { name: 'Estabilidade macroeconómica no quinquénio', source: 'BAD' },
     ],
-    reformulation:
-      'A percentagem de manufacturas nas exportações foi abandonada: premiava economias de entreposto, onde a mercadoria apenas atravessa a fronteira aduaneira. O inverso do HHI mede dispersão real da pauta exportadora.',
+    nota: 'A diversificação é medida pelo inverso do índice de concentração da pauta exportadora, e não pela percentagem de manufacturas. Essa percentagem premiaria economias de entreposto, onde a mercadoria apenas atravessa a fronteira aduaneira sem que nada nela seja produzido.',
   },
   {
     key: 'political',
@@ -66,8 +65,7 @@ export const PILLAR_DETAILS: PillarDetail[] = [
       { name: 'Confiança cívica nos órgãos de soberania', source: 'Afrobarómetro' },
       { name: 'Estado de direito e integridade nos serviços públicos', source: 'IIAG' },
     ],
-    reformulation:
-      'Ruptura epistémica: substitui avaliações de analistas de risco corporativo do Norte Global pela percepção directa e representativa dos cidadãos africanos, na linha de Claude Ake.',
+    nota: 'A legitimidade é aferida junto dos próprios cidadãos, por inquérito representativo, e não a partir de avaliações de analistas de risco corporativo do Norte Global. A escolha segue Claude Ake: quem julga a legitimidade de um Estado africano são as pessoas que vivem sob ele.',
   },
   {
     key: 'security',
@@ -85,8 +83,7 @@ export const PILLAR_DETAILS: PillarDetail[] = [
       },
       { name: 'Capacidade soberana de defesa e integridade territorial', source: 'SIPRI · UA' },
     ],
-    reformulation:
-      'Aplicação estrita da regra de safra: nenhuma observação de segurança com mais de cinco anos civis entra no cômputo, porque o quadro securitário do Sahel e dos Grandes Lagos muda em meses, não em décadas.',
+    nota: 'A regra de safra é aplicada com particular rigor neste pilar: nenhuma observação com mais de cinco anos civis entra no cômputo, porque o quadro securitário do Sahel e dos Grandes Lagos muda em meses, não em décadas.',
   },
   {
     key: 'international',
@@ -106,8 +103,7 @@ export const PILLAR_DETAILS: PillarDetail[] = [
         source: 'BAD · Banco Mundial IDS',
       },
     ],
-    reformulation:
-      'Reespecificação radical. A versão anterior tratava ausência de ajuda e de dívida como soberania, o que beneficiava autocracias rendeiras isolacionistas. Passou a medir-se dispersão de dependências.',
+    nota: 'O pilar mede dispersão de dependências, não a sua ausência. Tratar a falta de ajuda e de dívida como soberania beneficiaria autocracias rendeiras isolacionistas, que são autónomas apenas na aparência: um só comprador basta para lhes ditar as condições.',
   },
   {
     key: 'historical',
@@ -127,8 +123,7 @@ export const PILLAR_DETAILS: PillarDetail[] = [
       },
       { name: 'Padrão histórico de inserção colonial na economia-mundo', source: 'Samir Amin' },
     ],
-    reformulation:
-      'Deixou de pesar 20 % numa média de cinco pilares. Passou a moderador analítico por imposição da teoria de escalas de Stevens — a alteração metodológica mais consequente desta edição.',
+    nota: 'Não entra na média por imposição da teoria de escalas de medida de Stevens: as suas variáveis são nominais, e a média de variáveis nominais não tem significado matemático. É a restrição que mais determina a arquitectura do índice.',
   },
 ];
 
@@ -211,70 +206,97 @@ export const TIERS: TierDetail[] = [
   },
 ];
 
-/** Etapas do pipeline, da selecção do país ao relatório apresentado. */
+/** Etapas do pipeline, da geração periódica à consulta no browser. */
 export interface AlgorithmStep {
   n: number;
+  /** Fase a que a etapa pertence: produção dos dados ou consulta do índice. */
+  fase: 'geracao' | 'consulta';
   title: string;
   body: string;
   /** Quem executa: importa para saber onde está a autoridade do número. */
-  actor: 'cliente' | 'modelo';
+  actor: 'codigo' | 'modelo';
   /** Detalhe técnico verificável, mostrado em monoespaçado. */
   technical?: string;
 }
 
+export const FASES: Record<AlgorithmStep['fase'], { titulo: string; nota: string }> = {
+  geracao: {
+    titulo: 'Geração periódica',
+    nota: 'Corre fora do browser, em ciclos de 24 horas. É aqui que o modelo de linguagem intervém.',
+  },
+  consulta: {
+    titulo: 'Consulta',
+    nota: 'Corre no browser de quem abre o mapa. Não há inferência nenhuma neste lado.',
+  },
+};
+
 export const ALGORITHM_STEPS: AlgorithmStep[] = [
   {
     n: 1,
-    title: 'Selecção do Estado',
-    actor: 'cliente',
-    body: 'O clique no mapa resolve o país para um identificador ISO 3166-1 alpha-2, estável e independente do idioma da interface. O nome traduzido serve apenas para exibição e nunca é usado como chave de dados.',
-    technical: 'CountryRef { id: "AO", name: "Angola" }',
+    fase: 'geracao',
+    title: 'Selecção dos Estados a actualizar',
+    actor: 'codigo',
+    body: 'Cada ciclo percorre a lista canónica dos 54 Estados e retém aqueles cujo relatório mais recente já passou da validade. O critério é a frescura do registo, e não uma posição guardada, pelo que um ciclo interrompido é retomado pelo seguinte sem perder o trabalho feito.',
+    technical: 'validade por omissão: 24 horas',
   },
   {
     n: 2,
-    title: 'Consulta à cache',
-    actor: 'cliente',
-    body: 'A cache em memória é indexada por país e idioma. Um relatório já gerado reaparece instantaneamente; pedidos concorrentes para o mesmo par são deduplicados numa única geração.',
-    technical: 'chave = `${id}:${idioma}`',
-  },
-  {
-    n: 3,
+    fase: 'geracao',
     title: 'Construção do prompt metodológico',
-    actor: 'cliente',
+    actor: 'codigo',
     body: 'O prompt transporta a definição dos cinco pilares, os indicadores de cada um, a regra de safra e as proibições explícitas. Entre elas, a proibição de o modelo calcular médias, escalões ou classificações.',
   },
   {
-    n: 4,
+    n: 3,
+    fase: 'geracao',
     title: 'Inferência com saída estruturada',
     actor: 'modelo',
-    body: 'Um modelo de linguagem em execução local pontua cada pilar de 0 a 100 e justifica a pontuação. A resposta é restringida por um JSON Schema, o que elimina a análise sintáctica de texto livre.',
+    body: 'Um modelo de linguagem pontua cada pilar de 0 a 100 e justifica a pontuação em duas frases. A resposta é restringida por um JSON Schema, o que elimina a análise sintáctica de texto livre.',
     technical: 'Todos os campos numéricos são integer, nunca number',
   },
   {
-    n: 5,
+    n: 4,
+    fase: 'geracao',
     title: 'Validação e saneamento',
-    actor: 'cliente',
-    body: 'Cada pontuação é verificada quanto a tipo e a intervalo. Valores fora de 0 a 100 são corrigidos, campos em falta são rejeitados e um relatório incompleto nunca chega à interface.',
+    actor: 'codigo',
+    body: 'Cada pontuação é verificada quanto a tipo e a intervalo. Valores fora de 0 a 100 são rejeitados, campos em falta invalidam o relatório inteiro, e um relatório incompleto nunca é gravado.',
+  },
+  {
+    n: 5,
+    fase: 'geracao',
+    title: 'Agregação e classificação',
+    actor: 'codigo',
+    body: 'A pontuação composta é a média aritmética dos quatro pilares activos, cada um com peso de 25 %, e é ela que determina o escalão. O pilar histórico fica de fora da soma, por ser um moderador de natureza nominal.',
+    technical: 'IGA = (P1 + P2 + P3 + P4) / 4 → stabilityFromScore(iga)',
   },
   {
     n: 6,
-    title: 'Agregação',
-    actor: 'cliente',
-    body: 'A pontuação composta é a média aritmética dos quatro pilares activos, cada um com peso de 25 %. O pilar histórico fica de fora da soma, por ser um moderador de natureza nominal.',
-    technical: 'IGA = (P1 + P2 + P3 + P4) / 4',
+    fase: 'geracao',
+    title: 'Registo histórico',
+    actor: 'codigo',
+    body: 'O relatório e os cinco pilares são gravados numa só transacção, como um registo novo. Nada é substituído: é a acumulação destes registos que permite traçar a evolução da classificação de cada Estado.',
+    technical: 'uma linha por país, idioma e momento de geração',
   },
   {
     n: 7,
-    title: 'Classificação por escalão',
-    actor: 'cliente',
-    body: 'A pontuação é mapeada num dos seis escalões estatísticos robustos. Não existe posição ordinal de 1 a 54, nem no cálculo nem na apresentação.',
-    technical: 'stabilityFromScore(iga) → e1 … e6',
+    fase: 'consulta',
+    title: 'Leitura do índice',
+    actor: 'codigo',
+    body: 'Ao abrir o mapa, o browser lê de uma vez o relatório mais recente de cada Estado. O continente aparece classificado no primeiro segundo, sem esperar por inferência nenhuma.',
   },
   {
     n: 8,
+    fase: 'consulta',
+    title: 'Saneamento e recálculo',
+    actor: 'codigo',
+    body: 'Nada do que chega pela rede é aceite como está. As pontuações são forçadas a inteiros dentro do intervalo, os textos são aparados, e a média e o escalão são recalculados aqui pela mesma função que os produziu. Um valor adulterado na origem não passa uma classificação errada para o mapa.',
+  },
+  {
+    n: 9,
+    fase: 'consulta',
     title: 'Apresentação com proveniência',
-    actor: 'cliente',
-    body: 'O relatório indica o idioma de geração, o momento em que foi produzido e as fontes declaradas pelo modelo, assinaladas como não verificadas automaticamente.',
+    actor: 'codigo',
+    body: 'O relatório indica o momento em que foi produzido, o idioma em que o conteúdo foi gerado e as fontes declaradas pelo modelo, assinaladas como não verificadas automaticamente. O gráfico de evolução mostra a série de todas as gerações anteriores.',
   },
 ];
 
@@ -298,7 +320,7 @@ export const PRINCIPLES = [
   {
     id: 'escaloes',
     title: 'Proibição de rankings lineares',
-    body: 'A comunicação pública restringe-se aos seis escalões, com intervalos de incerteza declarados. A ordenação de 1 a 54 foi banida.',
+    body: 'A comunicação pública restringe-se aos seis escalões, com intervalos de incerteza declarados. O índice não publica, em circunstância nenhuma, uma ordenação de 1 a 54.',
   },
   {
     id: 'causalidade',
@@ -312,7 +334,7 @@ export const PRINCIPLES = [
   },
 ] as const;
 
-/** Resultado da auditoria de Monte Carlo, citado na página do algoritmo. */
+/** Resultado do protocolo de Monte Carlo, citado na página do algoritmo. */
 export const UNCERTAINTY_FINDINGS = [
   { label: 'Iterações da simulação', value: '10 000' },
   { label: 'Amplitude média do intervalo a 90 %', value: '12,9 posições' },
