@@ -164,6 +164,36 @@ jobs:
           echo "url=$url" >> "$GITHUB_OUTPUT"
           echo "Publicado em $url"
 
+      # As funções não passam pelo build do Vite e por isso escapam a todos os
+      # testes locais. Um import sem extensão explícita, por exemplo, parte-as
+      # em produção sem partir o build — e a falha dá-se a CARREGAR o módulo,
+      # antes de qualquer tratamento de erro poder responder. Este teste é o
+      # que apanha essa classe de avaria.
+      - name: Testar as funções publicadas
+        env:
+          ALVO: ${{ vars.SITE_URL || steps.deploy.outputs.url }}
+        run: |
+          echo "A testar $ALVO"
+
+          ping_estado=$(curl -sS -o /tmp/ping.json -w '%{http_code}' --max-time 30 "$ALVO/api/ping" || echo 000)
+          if [ "$ping_estado" != "200" ]; then
+            echo "::error::/api/ping devolveu $ping_estado. O runtime de funções não está a responder."
+            cat /tmp/ping.json 2>/dev/null | head -5
+            exit 1
+          fi
+          echo "/api/ping: 200"
+
+          # Sem cabeçalho de autorização o endpoint de geração tem de recusar.
+          # Um 500 aqui significa que a função rebenta ao carregar; um 200 em
+          # HTML significa que nem sequer é a função a responder.
+          cron_estado=$(curl -sS -o /tmp/cron.json -w '%{http_code}' --max-time 30 "$ALVO/api/cron/gerar" || echo 000)
+          if [ "$cron_estado" != "401" ]; then
+            echo "::error::/api/cron/gerar devolveu $cron_estado; esperava-se 401."
+            head -c 300 /tmp/cron.json 2>/dev/null
+            exit 1
+          fi
+          echo "/api/cron/gerar: 401, como esperado"
+
       - name: Resumo
         run: |
           {

@@ -12,8 +12,8 @@
  * havendo chave do gateway e não havendo Ollama configurado, usa-se o gateway.
  */
 
-import { AiError, generateJson as generateViaOllama, JsonSchema } from './ollamaClient';
-import { generateJsonViaGateway, GATEWAY_MODEL, hasGateway } from './gatewayClient';
+import { AiError, generateJson as generateViaOllama, JsonSchema } from './ollamaClient.js';
+import { generateJsonViaGateway, GATEWAY_MODEL, hasGateway } from './gatewayClient.js';
 
 const nodeEnv: Record<string, string | undefined> =
   typeof process !== 'undefined' && process.env ? process.env : {};
@@ -29,7 +29,7 @@ export const activeProvider = (): Provider => {
 /** Nome do modelo em uso, para registo de proveniência no relatório. */
 export const activeModel = async (): Promise<string> => {
   if (activeProvider() === 'gateway') return GATEWAY_MODEL;
-  const { OLLAMA_MODEL } = await import('./ollamaClient');
+  const { OLLAMA_MODEL } = await import('./ollamaClient.js');
   return OLLAMA_MODEL;
 };
 

@@ -1,12 +1,9 @@
 /**
- * Sonda mínima do runtime de funções.
+ * Verificação de saúde do runtime de funções.
  *
- * Sem imports e sem lógica: existe apenas para separar "o runtime não consegue
- * invocar a função" de "uma das dependências não é incluída no pacote". A
- * função de geração falhava antes de o corpo correr, o que nenhum try/catch
- * apanha, e sem esta separação o diagnóstico seria adivinhação.
- *
- * Pode ser removida assim que a geração periódica estiver estável.
+ * Não expõe nada e não toca na base. Serve o teste que corre depois de cada
+ * publicação: se esta responder e a de geração não, o problema está nas
+ * dependências dessa e não na plataforma.
  */
 
 interface RespostaNode {
@@ -15,20 +12,18 @@ interface RespostaNode {
   end: (corpo: string) => void;
 }
 
-export default async function handler(request: unknown, res?: RespostaNode): Promise<Response | void> {
-  const corpo = JSON.stringify({
-    ok: true,
-    // Diz qual das duas assinaturas o runtime usou.
-    assinatura: res ? 'node' : 'web',
-    temImportMeta: typeof (import.meta as unknown as { url?: string })?.url === 'string',
-    node: typeof process !== 'undefined' ? process.version : 'desconhecido',
-  });
+export default async function handler(_request: unknown, res?: RespostaNode): Promise<Response | void> {
+  const corpo = JSON.stringify({ ok: true });
 
   if (res) {
     res.statusCode = 200;
     res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Cache-Control', 'no-store');
     res.end(corpo);
     return;
   }
-  return new Response(corpo, { status: 200, headers: { 'Content-Type': 'application/json' } });
+  return new Response(corpo, {
+    status: 200,
+    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
+  });
 }

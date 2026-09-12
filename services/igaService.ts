@@ -13,9 +13,9 @@
  *      caso contrário cores, filtros e comparações partem-se noutros idiomas.
  */
 
-import { DIMENSION_KEYS, DimensionData, DimensionKey, IGAReport, Language, StabilityKey } from '../types';
-import { AiError, JsonSchema } from './ollamaClient';
-import { generateJson } from './inference';
+import { DIMENSION_KEYS, DimensionData, DimensionKey, IGAReport, Language, StabilityKey } from '../types.js';
+import { AiError, JsonSchema } from './ollamaClient.js';
+import { generateJson } from './inference.js';
 
 // ---------------------------------------------------------------------------
 // Schema da resposta

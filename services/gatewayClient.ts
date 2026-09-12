@@ -13,7 +13,7 @@
  * válido, por isso um modelo que devolva lixo falha de forma limpa.
  */
 
-import { AiError, JsonSchema } from './ollamaClient';
+import { AiError, JsonSchema } from './ollamaClient.js';
 
 const viteEnv: Record<string, string | undefined> =
   (import.meta as unknown as { env?: Record<string, string | undefined> }).env ?? {};

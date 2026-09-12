@@ -18,8 +18,8 @@
  * automaticamente por `services/inference.ts` quando existe AI_GATEWAY_API_KEY.
  */
 
-import { AFRICAN_COUNTRIES } from '../../utils/countries';
-import type { Language } from '../../types';
+import { AFRICAN_COUNTRIES } from '../../utils/countries.js';
+import type { Language } from '../../types.js';
 
 /**
  * Duração máxima da função, em segundos.
@@ -128,9 +128,9 @@ async function executar(
 ): Promise<Response | void> {
   // Importados aqui e não no topo: assim um pedido não autorizado não paga o
   // custo de carregar os clientes nem de ler configuração.
-  const { rpc, SUPABASE_SERVICE_KEY, SUPABASE_URL } = await import('../../services/supabaseClient');
-  const { fetchCountryAnalysis } = await import('../../services/igaService');
-  const { activeModel, activeProvider } = await import('../../services/inference');
+  const { rpc, SUPABASE_SERVICE_KEY, SUPABASE_URL } = await import('../../services/supabaseClient.js');
+  const { fetchCountryAnalysis } = await import('../../services/igaService.js');
+  const { activeModel, activeProvider } = await import('../../services/inference.js');
 
   if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
     return responder({ erro: 'Falta a configuração da base de dados ou a chave de serviço.' }, 500, res);
