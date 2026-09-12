@@ -194,6 +194,16 @@ jobs:
           fi
           echo "/api/cron/gerar: 401, como esperado"
 
+          # Um recurso em falta tem de dar 404. Se der 200, o reencaminhamento
+          # para a aplicação está a apanhar caminhos de ficheiro e a devolver
+          # HTML onde se espera uma imagem.
+          ausente=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 30 "$ALVO/instituicoes/nao-existe.svg" || echo 000)
+          if [ "$ausente" != "404" ]; then
+            echo "::error::Um ficheiro inexistente devolveu $ausente; esperava-se 404."
+            exit 1
+          fi
+          echo "recurso em falta: 404, como esperado"
+
       - name: Resumo
         run: |
           {
